@@ -1,7 +1,12 @@
 /**
  * Configuración del API
  */
-const API_URL = 'http://localhost:8000';
+// Detectar si estamos en producción o desarrollo
+const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+// Base URL para las API
+// En producción se usa una ruta relativa, en desarrollo se usa la URL completa
+const API_BASE_URL = isProduction ? '/api' : 'http://localhost:8000';
 
 /**
  * Funciones para manejar las peticiones HTTP al API
@@ -52,7 +57,7 @@ const api = {
         }
         
         try {
-            const response = await fetch(`${API_URL}${endpoint}`, fetchOptions);
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, fetchOptions);
             
             // Si la respuesta no es exitosa, lanzar error
             if (!response.ok) {
@@ -91,7 +96,7 @@ const api = {
         formData.append('username', username);
         formData.append('password', password);
 
-        const response = await fetch(`${API_URL}/token`, {
+        const response = await fetch(`${API_BASE_URL}/token`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'

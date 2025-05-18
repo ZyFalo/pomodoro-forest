@@ -11,9 +11,12 @@ from dotenv import load_dotenv
 import pymongo
 from pymongo import MongoClient
 from bson import ObjectId
-import json
 
-# Importar scrapers
+# Importar componentes adicionales para servir archivos estáticos
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+# Resto de tus imports...
 from app.scrapers.frases_scraper import obtener_frase_del_dia
 from app.scrapers.audio_scraper import obtener_audio_bosque
 
@@ -34,7 +37,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 1 week
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token")  # Cambiado a api/token
 
 # Initialize FastAPI
 app = FastAPI(title="Pomodoro Forest API")
@@ -45,8 +48,7 @@ origins = [
     "http://localhost:8000",
     "http://localhost:8080",
     "http://localhost:3000",
-    "https://pomodoro-forest.vercel.app",  # Si planeas desplegar el frontend en Vercel
-    "*",  # Permite todas las origins en desarrollo (quitar en producción)
+    "*",  # Permite todas las origins en desarrollo
 ]
 
 app.add_middleware(
@@ -57,14 +59,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins in development
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Detectar entorno de producción o desarrollo
+is_prod = os.getenv("RAILWAY_ENVIRONMENT") == "production"
+
+# Configurar rutas estáticas para el frontend
+# En producción, buscamos en "../frontend"
+# En desarrollo, buscamos en "../../frontend"
+frontend_path = "../frontend" if is_prod else "../../frontend"
+if not os.path.exists(frontend_path):
+    # Intentar con otras rutas posibles
+    possible_paths = ["../frontend", "../../frontend", "./frontend", "/app/frontend"]
+    for path in possible_paths:
+        if os.path.exists(path):
+            frontend_path = path
+            break
+
+# Montar archivos estáticos
+app.mount("/static", StaticFiles(directory=f"{frontend_path}/css"), name="css")
+app.mount("/js", StaticFiles(directory=f"{frontend_path}/js"), name="js")
+app.mount("/img", StaticFiles(directory=f"{frontend_path}/img", optional=True), name="img")
+
+# Prefijo todas tus rutas API con /api
+# Aquí modificamos tus rutas existentes para tener el prefijo /api
+# Por ejemplo, cambia @app.post("/register") a @app.post("/api/register")
 
 # Al inicio de la aplicación, agregar script de migración
 @app.on_event("startup")
@@ -163,7 +180,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return user
 
 # Endpoints
-@app.post("/register", response_model=Token)
+@app.post("/api/register", response_model=Token)
 async def register_user(user: User):
     db_user = get_user(user.username)
     if db_user:
@@ -190,7 +207,7 @@ async def register_user(user: User):
     
     return {"access_token": access_token, "token_type": "bearer"}
 
-@app.post("/token", response_model=Token)
+@app.post("/api/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(form_data.username, form_data.password)
     if not user:
@@ -205,7 +222,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
-@app.post("/start-pomodoro")
+@app.post("/api/start-pomodoro")
 async def start_pomodoro(settings: PomodoroSettings, current_user = Depends(get_current_user)):
     audio_url = obtener_audio_bosque()
     if not audio_url:
@@ -224,14 +241,14 @@ async def start_pomodoro(settings: PomodoroSettings, current_user = Depends(get_
         "motivational_phrase": frase
     }
 
-@app.get("/motivational-phrase")
+@app.get("/api/motivational-phrase")
 async def get_motivational_phrase(current_user = Depends(get_current_user)):
     frase = obtener_frase_del_dia()
     if not frase:
         frase = "¡Cada minuto cuenta en tu camino hacia el éxito!"
     return {"phrase": frase}
 
-@app.post("/complete-pomodoro")
+@app.post("/api/complete-pomodoro")
 async def complete_pomodoro(current_user = Depends(get_current_user)):
     # Lista de árboles predefinidos
     trees = [
@@ -298,12 +315,12 @@ async def complete_pomodoro(current_user = Depends(get_current_user)):
         }
     }
 
-@app.get("/trees")
+@app.get("/api/trees")
 async def get_trees(current_user = Depends(get_current_user)):
     user = get_user(current_user["username"])
     return {"trees": user.get("trees", [])}
 
-@app.delete("/trees/{tree_id}")
+@app.delete("/api/trees/{tree_id}")
 async def delete_tree(tree_id: str, current_user = Depends(get_current_user)):
     result = db.users.update_one(
         {"username": current_user["username"]},
@@ -315,7 +332,7 @@ async def delete_tree(tree_id: str, current_user = Depends(get_current_user)):
     
     return {"message": "Tree deleted successfully"}
 
-@app.put("/trees/{tree_id}")
+@app.put("/api/trees/{tree_id}")
 async def update_tree(tree_id: str, tree: Tree, current_user = Depends(get_current_user)):
     # Primero verificamos si el árbol existe
     user = get_user(current_user["username"])
@@ -342,7 +359,7 @@ async def update_tree(tree_id: str, tree: Tree, current_user = Depends(get_curre
     
     return {"message": "Tree updated successfully"}
 
-@app.post("/user/stats/update")
+@app.post("/api/user/stats/update")
 async def update_user_stats(stats: dict, current_user = Depends(get_current_user)):
     # Actualizar las estadísticas del usuario
     db.users.update_one(
@@ -354,7 +371,7 @@ async def update_user_stats(stats: dict, current_user = Depends(get_current_user
     )
     return {"status": "Estadísticas actualizadas correctamente"}
 
-@app.get("/user/stats")
+@app.get("/api/user/stats")
 async def get_user_stats(current_user = Depends(get_current_user)):
     # Obtener información del usuario
     user = db.users.find_one({"username": current_user["username"]})
@@ -369,6 +386,23 @@ async def get_user_stats(current_user = Depends(get_current_user)):
         "total_focus_minutes": user.get("total_focus_minutes", 0)
     }
 
+# Ruta raíz para servir el index.html
+@app.get("/", response_class=FileResponse)
+async def read_index():
+    return f"{frontend_path}/index.html"
+
+# Rutas para compatibilidad con SPA (Single Page Application)
+@app.get("/{path:path}", response_class=FileResponse)
+async def read_path(path: str):
+    # Si el archivo existe, lo servimos
+    file_path = f"{frontend_path}/{path}"
+    if os.path.exists(file_path) and not os.path.isdir(file_path):
+        return file_path
+    # Si no existe, devolvemos index.html para que la app maneje la ruta
+    return f"{frontend_path}/index.html"
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    # Usa el puerto de Railway o 8000 como fallback
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
