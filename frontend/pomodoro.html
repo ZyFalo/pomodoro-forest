@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Forest - Temporizador</title>    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-light">
+    <!-- Video de fondo -->
+    <div class="background-video-container">
+        <video autoplay muted loop id="background-video">
+            <source src="https://videos.pexels.com/video-files/3859447/3859447-uhd_2560_1440_24fps.mp4" type="video/mp4">
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+    
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light glass-nav">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <div class="brand-icon">
+                    <i class="bi bi-tree-fill"></i>
+                </div>
+                <span>Pomodoro Forest</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="pomodoro.html">
+                            <i class="bi bi-clock-fill me-1"></i> Pomodoro
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="inventory.html">
+                            <i class="bi bi-tree-fill me-1"></i> Mi Bosque
+                        </a>
+                    </li>
+                </ul>
+                <!-- Reemplazar el dropdown con una simple visualización del usuario -->
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <div class="nav-link user-info">
+                            <i class="bi bi-person-circle me-2"></i>
+                            <span id="navbarUsername">Usuario</span>
+                        </div>
+                    </li>
+                    <!-- Añadir botón de cerrar sesión separado -->
+                    <li class="nav-item">
+                        <a class="nav-link logout-link" href="#" onclick="logout()">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>    <!-- Contenido Principal -->
+    <div class="container py-5">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="forest-header">
+                    <h1 class="text-white display-4">
+                        <i class="bi bi-clock-fill"></i> Pomodoro Timer
+                    </h1>
+                    <p class="text-white lead">Mejora tu concentración y cultiva árboles para tu bosque personal</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="glass-card shadow-lg mb-4">
+                    <div class="card-body p-4">
+                        <!-- Temporizador -->
+                        <div class="timer-container fade-in-up">
+                            <div class="timer-display" id="timer">
+                                00:00
+                            </div>
+                            
+                            <!-- Configuración y Controles -->
+                            <div class="mb-4 mt-4">
+                                <div class="timer-input-container">
+                                    <label for="minutesInput" class="text-green">Duración:</label>
+                                    <input type="number" id="minutesInput" class="form-control form-control-lg" min="1" max="60" value="25">
+                                    <span class="ms-2 text-green">minutos</span>
+                                </div>
+                                
+                                <div class="timer-controls mt-4">
+                                    <button id="startButton" class="btn btn-forest btn-lg w-100">
+                                        <i class="bi bi-play-fill"></i> Iniciar Pomodoro
+                                    </button>
+                                    <button id="stopButton" class="btn btn-danger btn-lg w-100 d-none">
+                                        <i class="bi bi-stop-fill"></i> Detener
+                                    </button>
+                                </div>
+                            </div>
+                              <!-- Reproductor de Audio -->
+                            <div class="audio-container glass-alert p-3 mb-4" id="audioContainer">
+                                <div class="d-flex align-items-center">
+                                    <div class="audio-icon me-3">
+                                        <i class="bi bi-music-note-beamed"></i>
+                                    </div>
+                                    <p class="mb-0 text-white">El audio ambiental del bosque se reproducirá en bucle al iniciar el Pomodoro.</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Frase Motivacional -->
+                            <div class="motivational-phrase glass-alert" id="motivationalPhrase">
+                                Inicia un Pomodoro para ver frases motivacionales.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Instrucciones -->
+                <div class="glass-card mt-4 shadow-lg">
+                    <div class="card-header">
+                        <h4 class="mb-0 text-white"><i class="bi bi-info-circle text-white"></i> ¿Cómo funciona?</h4>
+                    </div>
+                    <div class="card-body">
+                        <ol class="text-white mb-0">
+                            <li>Configura la duración deseada para tu sesión (predeterminado: 25 minutos).</li>
+                            <li>Haz clic en "Iniciar" para comenzar el temporizador.</li>
+                            <li>Trabaja enfocado hasta que termine el temporizador.</li>
+                            <li>Al finalizar, ¡ganarás un árbol para tu bosque!</li>
+                            <li>Toma un breve descanso y comienza de nuevo.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    <!-- Footer -->
+    <footer class="glass-footer mt-5 py-4">
+        <div class="container text-center">
+            <div class="footer-logo mb-3">
+                <i class="bi bi-tree-fill"></i>
+            </div>
+            <p class="text-white mb-1">
+                Pomodoro Forest &copy; 2025
+            </p>
+            <p class="text-white-50 small">
+                Mejora tu productividad mientras cultivas tu bosque virtual
+            </p>
+        </div>
+    </footer>    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/pomodoro.js"></script>
+    
+    <!-- Modal para mostrar el árbol ganado -->
+    <div class="modal fade" id="treeEarnedModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-white">
+                        <i class="bi bi-trophy-fill text-warning me-2"></i>¡Felicidades!
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="confetti-container">
+                        <div class="confetti"></div>
+                        <div class="confetti"></div>
+                        <div class="confetti"></div>
+                        <div class="confetti"></div>
+                        <div class="confetti"></div>
+                        <div class="confetti"></div>
+                        <div class="confetti"></div>
+                        <div class="confetti"></div>
+                        <div class="confetti"></div>
+                        <div class="confetti"></div>
+                    </div>
+                    
+                    <div class="earned-tree-container mb-3">
+                        <img id="earnedTreeImage" src="" alt="Árbol ganado" class="earned-tree-image mb-3 mt-2">
+                        <h4 id="earnedTreeName" class="text-white mb-2"></h4>
+                        <span id="earnedTreeCategory" class="badge bg-success mb-3"></span>
+                        <p id="earnedTreeDescription" class="text-white-50"></p>
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        ¡Has completado tu sesión de Pomodoro exitosamente y has ganado un nuevo árbol para tu bosque!
+                    </div>
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <a href="inventory.html" class="btn btn-success me-2">
+                        <i class="bi bi-tree-fill me-1"></i> Ver mi bosque
+                    </a>
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i> Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Actualizar nombre de usuario en la navbar
+            const usernameElement = document.getElementById('navbarUsername');
+            if (usernameElement) {
+                usernameElement.textContent = localStorage.getItem('username') || "Usuario";
+            }
+        });
+    </script>
+    <script>
+        // Asegurarse de que el nombre de usuario se muestre correctamente
+        document.addEventListener('DOMContentLoaded', function() {
+            const username = localStorage.getItem('username');
+            if (username) {
+                document.getElementById('navbarUsername').textContent = username;
+            }
+        });
+    </script>
+</body>
+</html>

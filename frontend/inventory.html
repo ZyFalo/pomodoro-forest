@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Forest - Mi Bosque</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-light">
+    <!-- Video de fondo -->
+    <div class="background-video-container">
+        <video autoplay muted loop id="background-video">
+            <source src="https://videos.pexels.com/video-files/2894887/2894887-uhd_2560_1440_24fps.mp4" type="video/mp4">
+        </video>
+        <div class="video-overlay forest-overlay"></div>
+    </div>
+    
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light glass-nav">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <div class="brand-icon">
+                    <i class="bi bi-tree-fill"></i>
+                </div>
+                <span>Pomodoro Forest</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="pomodoro.html">
+                            <i class="bi bi-clock-fill me-1"></i> Pomodoro
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="inventory.html">
+                            <i class="bi bi-tree-fill me-1"></i> Mi Bosque
+                        </a>
+                    </li>
+                </ul>
+                <!-- Reemplazar el dropdown con una simple visualización del usuario -->
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <div class="nav-link user-info">
+                            <i class="bi bi-person-circle me-2"></i>
+                            <span id="navbarUsername">Usuario</span>
+                        </div>
+                    </li>
+                    <!-- Añadir botón de cerrar sesión separado -->
+                    <li class="nav-item">
+                        <a class="nav-link logout-link" href="#" onclick="logout()">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container py-5">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="forest-header">
+                    <h1 class="text-white display-4">
+                        <i class="bi bi-tree-fill"></i> Mi Bosque
+                    </h1>
+                    <p class="text-white lead">Observa cómo crece tu bosque con cada sesión Pomodoro completada</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjetas de estadísticas -->
+        <div class="row mb-5 g-3">
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="bi bi-tree-fill"></i>
+                    </div>
+                    <h3 class="stats-value" id="totalTrees">0</h3>
+                    <p class="stats-label">Árboles Coleccionados</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="bi bi-check2-circle"></i>
+                    </div>
+                    <h3 class="stats-value" id="totalPomodoros">0</h3>
+                    <p class="stats-label">Pomodoros Completados</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                    <h3 class="stats-value" id="totalFocusTime">0</h3>
+                    <p class="stats-label">Minutos Enfocados</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensaje motivacional -->
+        <div class="alert glass-alert mb-4">
+            <div class="d-flex">
+                <div class="alert-icon">
+                    <i class="bi bi-lightbulb-fill"></i>
+                </div>
+                <div>
+                    <h4 class="text-white">¡Cultiva tu bosque! <span class="wave-emoji">🌱</span></h4>
+                    <p class="text-white mb-0">Cada Pomodoro completado te premiará con un nuevo árbol para tu bosque. Sigue enfocado y observa cómo crece tu colección.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenedor de árboles -->
+        <div class="glass-card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2><i class="bi bi-collection"></i> Mi Colección</h2>
+                <a href="pomodoro.html" class="btn btn-forest">
+                    <i class="bi bi-plus-circle"></i> Ganar más árboles
+                </a>
+            </div>
+            <div class="card-body">
+                <!-- Contenedor del inventario -->
+                <div id="inventory" class="row g-4">
+                    <!-- El contenido se cargará dinámicamente con JavaScript -->
+                    <div class="col-12 text-center py-5">
+                        <div class="spinner-grow text-success" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-3 text-white">Cargando tu bosque...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sin árboles mensaje -->
+        <div id="emptyInventory" class="glass-card mb-4 d-none">
+            <div class="card-body text-center py-5">
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="bi bi-tree"></i>
+                    </div>
+                    <h3 class="text-white">Tu bosque está vacío</h3>
+                    <p class="text-white">¡Completa sesiones Pomodoro para comenzar a plantar árboles!</p>
+                    <a href="pomodoro.html" class="btn btn-forest btn-lg mt-3">
+                        <i class="bi bi-clock-fill me-2"></i>Iniciar Pomodoro
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="glass-footer mt-5 py-4">
+        <div class="container text-center">
+            <div class="footer-logo mb-3">
+                <i class="bi bi-tree-fill"></i>
+            </div>
+            <p class="text-white mb-1">
+                Pomodoro Forest &copy; 2025
+            </p>
+            <p class="text-white-50 small">
+                Mejora tu productividad mientras cultivas tu bosque virtual
+            </p>
+        </div>
+    </footer>
+
+    <!-- Template para las tarjetas de árboles -->
+    <template id="treeCardTemplate">
+        <div class="col-md-6 col-lg-4 tree-item">
+            <div class="tree-card">
+                <div class="tree-image-container">
+                    <img src="" alt="" class="tree-image">
+                    <div class="tree-badge">
+                        <span class="badge"></span>
+                    </div>
+                </div>
+                <div class="tree-content">
+                    <h3 class="tree-name"></h3>
+                    <p class="tree-description"></p>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/inventory.js"></script>
+    <script src="js/animations.js"></script>    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Asegurar que el nombre de usuario se muestra correctamente
+                const username = localStorage.getItem('username');
+                if (username) {
+                    document.getElementById('navbarUsername').textContent = username;
+                }
+                
+                // Animar primero las estadísticas
+                document.querySelectorAll('.stats-card').forEach((card, index) => {
+                    setTimeout(() => {
+                        card.classList.add('stats-animate');
+                    }, 300 + (index * 150));
+                });                  // PRIMERO: Intentar obtener estadísticas del backend
+                try {
+                    console.log("Obteniendo estadísticas de usuario...");
+                    const stats = await api.getUserStats();
+                    console.log("Estadísticas recibidas:", stats);
+                    
+                    // Actualizar los contadores con los datos de la base de datos
+                    document.getElementById('totalPomodoros').textContent = stats.pomodoros_completed || "0";
+                    document.getElementById('totalFocusTime').textContent = stats.total_focus_minutes || "0";
+                    document.getElementById('totalTrees').textContent = stats.total_trees || "0";
+                    
+                    // SEGUNDO: Solo después de mostrar estadísticas, cargar árboles
+                    setTimeout(async () => {
+                        try {
+                            // Cargar el inventario de árboles
+                            await loadInventory();
+                        } catch (treeError) {
+                            console.error("Error cargando árboles:", treeError);
+                            // Mostrar mensaje de error
+                            const inventoryContainer = document.getElementById('inventory');
+                            inventoryContainer.innerHTML = `
+                                <div class="col-12 text-center py-5">
+                                    <div class="alert alert-danger">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                        Error al cargar tu inventario. Por favor, intenta de nuevo.
+                                    </div>
+                                    <button class="btn btn-forest mt-3" onclick="loadInventory()">
+                                        <i class="bi bi-arrow-clockwise me-2"></i>Reintentar
+                                    </button>
+                                </div>
+                            `;
+                        }
+                    }, 800); // Retraso para dar prioridad visual a las estadísticas
+                    
+                } catch (statsError) {
+                    // Si falla, reiniciar los contadores a cero
+                    document.getElementById('totalPomodoros').textContent = "0";
+                    document.getElementById('totalFocusTime').textContent = "0";
+                    
+                    // Limpiar localStorage para evitar mostrar datos antiguos
+                    localStorage.removeItem('pomodoros_completed');
+                    localStorage.removeItem('total_focus_minutes');
+                    console.warn("No se pudieron cargar las estadísticas del servidor, se muestran valores predeterminados");
+                    
+                    // Cargar árboles de todas formas
+                    setTimeout(loadInventory, 800);
+                }
+            } catch (error) {
+                console.error('Error cargando información:', error);
+                // En caso de error general, intentar cargar árboles de todas formas
+                setTimeout(loadInventory, 800);
+            }
+        });
+
+        // Remover el evento DOMContentLoaded de inventory.js para evitar cargar los árboles dos veces
+        // Esto se hace en el script anterior
+    </script>
+
+    <script>
+        // Asegurarse de que el nombre de usuario se muestre correctamente
+        document.addEventListener('DOMContentLoaded', function() {
+            const username = localStorage.getItem('username');
+            if (username) {
+                document.getElementById('navbarUsername').textContent = username;
+            }
+        });
+    </script>
+</body>
+</html>
