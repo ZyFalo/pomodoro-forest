@@ -76,7 +76,7 @@ Este proyecto está configurado para ser desplegado en Railway:
 
 ## Autores 👥
 
-[Tu nombre o equipo aquí]
+William Peña
 
 ## Licencia 📜
 
