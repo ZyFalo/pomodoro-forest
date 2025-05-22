@@ -78,21 +78,58 @@ function initPomodoro() {
                 if (activeSessionDuration) activeSessionDuration.textContent = duration;
                 activePomodoroMessage.classList.remove('d-none');
             }
-            
-            // Inicia el temporizador
+              // Inicia el temporizador
             isRunning = true;
             updateTimer();
             pomodoroTimer = setInterval(updateTimer, 1000);
             
-            // Configura el intervalo para actualizar frases cada 5 minutos
-            phraseInterval = setInterval(updateMotivationalPhrase, 5 * 60 * 1000);
+            // Limpia historial de frases al comenzar un nuevo pomodoro
+            frasesMostradas.length = 0;
+              
+            // Configura el sistema para actualizar frases cada 5 segundos
+            // Llamamos primero a updateMotivationalPhrase para obtener la primera frase
+            await updateMotivationalPhrase(); // Obtener primera frase inmediatamente
+            
+            console.log('Sistema de actualización de frases inicializado');
+            // Implementamos un mecanismo de actualización más robusto
+            const INTERVALO_FRASES = 10000; // 5 segundos
+            
+            // Limpiamos cualquier temporizador existente primero
+            if (phraseInterval) {
+                clearTimeout(phraseInterval);
+                phraseInterval = null;
+            }
+            
+            // Función para programar la próxima actualización
+            function programarProximaActualizacion() {
+                console.log('Programando próxima actualización de frase en 5 segundos');
+                
+                // Solo programar si el pomodoro sigue en ejecución
+                if (!isRunning) {
+                    console.log('Pomodoro ya no está en ejecución, no se programarán más actualizaciones');
+                    return;
+                }
+                
+                // Programar la próxima actualización
+                phraseInterval = setTimeout(async () => {
+                    console.log('Ejecutando actualización programada de frase');
+                    if (isRunning) {
+                        await updateMotivationalPhrase();
+                        // Programar la siguiente después de completar esta
+                        programarProximaActualizacion();
+                    }
+                }, INTERVALO_FRASES);
+            }
+            
+            // Iniciar el ciclo de actualizaciones
+            programarProximaActualizacion();
         } catch (error) {
             console.error('Error al iniciar Pomodoro:', error);
             alert('Error al iniciar el Pomodoro. Por favor, intenta de nuevo.');
             
             // Restaura el botón de inicio
             startButton.disabled = false;
-            startButton.innerHTML = 'Iniciar';
+            startButton.innerHTML = '<i class="bi bi-play-fill"></i> Iniciar Pomodoro';
         }
     });
     
@@ -173,26 +210,96 @@ function setupAudio(audioUrl, container) {
 }
 
 /**
+ * Mantiene un historial de frases mostradas para evitar repeticiones inmediatas
+ */
+const frasesMostradas = [];
+const MAX_FRASES_HISTORIAL = 5; // Número máximo de frases para recordar
+
+/**
  * Actualiza la frase motivacional
  */
 async function updateMotivationalPhrase() {
-    if (!isRunning) return;
+    if (!isRunning) {
+        console.log('No se actualiza la frase porque el pomodoro no está en ejecución');
+        return;
+    }
+    
+    console.log('Iniciando actualización de frase motivacional...');
     
     try {
         const phraseData = await api.getMotivationalPhrase();
         const motivationalPhraseElement = document.getElementById('motivationalPhrase');
         
-        // Añade animación para la transición
-        motivationalPhraseElement.classList.remove('fade-in');
+        if (!motivationalPhraseElement || !phraseData || !phraseData.phrase) {
+            console.error('Error: No se pudo actualizar la frase motivacional - Elemento o datos no disponibles');
+            return;
+        }
         
-        // Pequeño truco para reiniciar la animación
-        void motivationalPhraseElement.offsetWidth;
+        console.log('Obtenida nueva frase motivacional:', phraseData.phrase);
         
-        // Actualiza el texto y agrega la animación
-        motivationalPhraseElement.textContent = phraseData.phrase;
-        motivationalPhraseElement.classList.add('fade-in');
+        // Si la frase es la misma que alguna reciente, intentamos hasta 3 veces obtener una diferente
+        if (frasesMostradas.includes(phraseData.phrase)) {
+            console.log('Frase repetida, solicitando otra... (frases mostradas anteriormente:', frasesMostradas, ')');
+            // Incrementar contador de intentos (en variable global o como atributo)
+            window.phraseRetryCount = (window.phraseRetryCount || 0) + 1;
+            
+            if (window.phraseRetryCount < 3) {
+                // Esperar un poco y volver a intentar con una solicitud nueva
+                console.log(`Intento ${window.phraseRetryCount} de 3: Solicitando frase diferente en 800ms`);
+                setTimeout(updateMotivationalPhrase, 800);
+                return;
+            } else {
+                // Después de 3 intentos, añadimos un marcador visual aleatorio
+                console.log('Después de 3 intentos, añadiendo emoji a la frase repetida');
+                const emojis = ['✨', '🌟', '💫', '⚡', '🔥', '🌈', '🌻', '🌱', '🌲', '🍃'];
+                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                phraseData.phrase = `${randomEmoji} ${phraseData.phrase}`;
+                window.phraseRetryCount = 0;
+            }
+        } else {
+            // Reiniciar contador si la frase es diferente
+            window.phraseRetryCount = 0;
+        }
+        
+        // Actualizar historial de frases mostradas
+        frasesMostradas.push(phraseData.phrase);
+        if (frasesMostradas.length > MAX_FRASES_HISTORIAL) {
+            frasesMostradas.shift(); // Elimina la frase más antigua
+        }
+        
+        console.log('Historial actual de frases:', frasesMostradas);
+          
+        // Añade animación para la transición de salida
+        console.log('Iniciando animación de transición de frase');
+        motivationalPhraseElement.classList.remove('phrase-fade-in');
+        motivationalPhraseElement.classList.add('phrase-fade-out');
+        
+        // Esperar a que termine la animación de salida antes de cambiar el texto
+        setTimeout(() => {
+            if (!isRunning) return; // Verificar nuevamente por si se detuvo durante la animación
+            
+            // Actualizar el texto
+            console.log('Actualizando texto de la frase a:', phraseData.phrase);
+            motivationalPhraseElement.textContent = phraseData.phrase;
+            
+            // Quitar la animación de salida y reiniciar
+            motivationalPhraseElement.classList.remove('phrase-fade-out');
+            
+            // Forzar un reflow para asegurar que la animación se reinicie correctamente
+            void motivationalPhraseElement.offsetWidth;
+            
+            // Aplicar animación de entrada
+            motivationalPhraseElement.classList.add('phrase-fade-in');
+            console.log('Animación de entrada aplicada');
+        }, 500); // 500ms, corresponde a la duración de la animación de salida
+        
+        console.log('Frase actualizada correctamente:', phraseData.phrase);
     } catch (error) {
         console.error('Error al obtener frase motivacional:', error);
+        
+        // En caso de error, intentar nuevamente después de un breve retraso
+        console.log('Programando reintento en 2 segundos debido a error');
+        setTimeout(updateMotivationalPhrase, 2000);
     }
 }
 
@@ -200,9 +307,20 @@ async function updateMotivationalPhrase() {
  * Detiene el pomodoro actual
  */
 function stopPomodoro() {
+    console.log('Deteniendo el pomodoro y limpiando todos los temporizadores');
+    
     // Limpia los intervalos
-    clearInterval(pomodoroTimer);
-    clearInterval(phraseInterval);
+    if (pomodoroTimer) {
+        clearInterval(pomodoroTimer);
+        pomodoroTimer = null;
+    }
+    
+    // Corregimos para usar clearTimeout ya que phraseInterval es un setTimeout
+    if (phraseInterval) {
+        clearTimeout(phraseInterval);
+        phraseInterval = null;
+        console.log('Se ha detenido el temporizador de actualización de frases');
+    }
     
     // Detiene el audio
     if (audioElement) {

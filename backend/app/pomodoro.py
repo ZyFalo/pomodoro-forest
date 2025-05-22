@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime, timedelta
 from pydantic import BaseModel
 from app.auth import get_current_user
 from app.scrapers.frases_scraper import obtener_frase_del_dia
 from app.scrapers.audio_scraper import obtener_audio_bosque
+from app.scrapers.frases_scraper import obtener_frase_aleatoria_siempre
 from app.database import db
 from bson import ObjectId
 import random
@@ -19,7 +20,8 @@ async def start_pomodoro(settings: PomodoroSettings, current_user = Depends(get_
     if not audio_url:
         audio_url = "https://assets.mixkit.co/sfx/preview/mixkit-forest-stream-ambience-loop-542.mp3"  # Fallback audio
     
-    frase = obtener_frase_del_dia()
+    # Usar obtener_frase_aleatoria_siempre en lugar de obtener_frase_del_dia
+    frase = obtener_frase_aleatoria_siempre()
     if not frase:
         frase = "¡El tiempo es oro! Aprovéchalo al máximo."  # Fallback phrase
     
@@ -34,103 +36,113 @@ async def start_pomodoro(settings: PomodoroSettings, current_user = Depends(get_
 
 @router.get("/motivational-phrase")
 async def get_motivational_phrase(current_user = Depends(get_current_user)):
-    frase = obtener_frase_del_dia()
-    if not frase:
-        frase = "¡Cada minuto cuenta en tu camino hacia el éxito!"
+    # Usar la función mejorada para siempre obtener una frase aleatoria
+    # que no se repite con respecto a la anterior
+    frase = obtener_frase_aleatoria_siempre()
+    
+    # Asegurarnos de que la frase no esté vacía
+    if not frase or frase.strip() == "":
+        frase = "¡Sigue adelante! Cada minuto de concentración te acerca a tus metas."
+        
     return {"phrase": frase}
+
+@router.get("/tree-types")
+async def get_tree_types(current_user = Depends(get_current_user)):
+    """
+    Obtiene una lista de todos los tipos de árboles disponibles en la base de datos.
+    Si no hay tipos de árboles en la base de datos, se devuelven algunos árboles predeterminados.
+    """
+    # Buscar todos los tipos de árboles en la base de datos
+    tree_types = list(db.tree_types.find())
+    
+    # Si no hay tipos de árboles en la base de datos, crear algunos predeterminados
+    if not tree_types:
+        default_trees = [
+            {
+                "name": "Pino",
+                "category": "Coníferas",
+                "description": "Un majestuoso pino que simboliza tu enfoque y resistencia.",
+                "image_url": "https://cdn-icons-png.flaticon.com/512/628/628283.png"
+            },
+            {
+                "name": "Roble",
+                "category": "Caducifolios",
+                "description": "Un fuerte roble que representa la solidez de tu trabajo.",
+                "image_url": "https://cdn-icons-png.flaticon.com/512/1245/1245042.png"
+            },
+            {
+                "name": "Cerezo",
+                "category": "Florales",
+                "description": "Un hermoso cerezo en flor que simboliza el progreso y la belleza de tu esfuerzo.",
+                "image_url": "https://cdn-icons-png.flaticon.com/512/1466/1466332.png"
+            },
+            {
+                "name": "Palmera",
+                "category": "Tropicales",
+                "description": "Una palmera tropical que representa la calma y el equilibrio en tu trabajo.",
+                "image_url": "https://cdn-icons-png.flaticon.com/512/2826/2826838.png"
+            },
+            {
+                "name": "Sauce",
+                "category": "Ribereños",
+                "description": "Un tranquilo sauce que simboliza la flexibilidad y adaptabilidad.",
+                "image_url": "https://cdn-icons-png.flaticon.com/512/1466/1466538.png"
+            }
+        ]
+        
+        # Insertar los árboles predeterminados en la base de datos
+        db.tree_types.insert_many(default_trees)
+        tree_types = default_trees
+    
+    # Transformar los objetos ObjectId a string para serialización JSON
+    for tree in tree_types:
+        if "_id" in tree:
+            tree["_id"] = str(tree["_id"])
+    
+    return tree_types
 
 @router.post("/complete-pomodoro")
 async def complete_pomodoro(current_user = Depends(get_current_user)):
-    # Verificar si existe la colección "trees" en la base de datos
-    # y crearla con árboles predefinidos si no existe
     try:
-        # Verificar si ya existe la colección de árboles
-        if "trees" not in db.list_collection_names():
-            # Lista de árboles predefinidos para insertar en la colección
-            default_trees = [
-                {
-                    "name": "Roble",
-                    "category": "Bosque",
-                    "image_url": "https://cdn.pixabay.com/photo/2015/03/07/10/00/oak-tree-662500_640.jpg",
-                    "description": "Un majestuoso roble, símbolo de fuerza y perseverancia."
-                },
-                {
-                    "name": "Pino",
-                    "category": "Bosque",
-                    "image_url": "https://cdn.pixabay.com/photo/2016/02/13/12/26/tree-1197911_640.jpg",
-                    "description": "Un alto pino verde, representa la longevidad y sabiduría."
-                },
-                {
-                    "name": "Cerezo",
-                    "category": "Floración",
-                    "image_url": "https://cdn.pixabay.com/photo/2018/04/27/09/23/cherry-blossoms-3354934_640.jpg",
-                    "description": "Un hermoso cerezo en flor, símbolo de la belleza efímera y la renovación."
-                },
-                {
-                    "name": "Arce",
-                    "category": "Otoño",
-                    "image_url": "https://cdn.pixabay.com/photo/2015/11/07/11/25/autumn-1031286_640.jpg",
-                    "description": "Un arce con hojas rojas, perfecto para representar el cambio y adaptación."
-                },
-                {
-                    "name": "Sauce Llorón",
-                    "category": "Agua",
-                    "image_url": "https://cdn.pixabay.com/photo/2013/05/07/13/40/weeping-willow-109287_640.jpg",
-                    "description": "Un sauce llorón que crece junto al agua, símbolo de flexibilidad y resiliencia."
-                },
-                {
-                    "name": "Secuoya",
-                    "category": "Antiguo",
-                    "image_url": "https://cdn.pixabay.com/photo/2017/07/05/15/30/sequoia-2474953_640.jpg",
-                    "description": "Una imponente secuoya, representa grandeza y resistencia."
-                }
-            ]
-            
-            # Insertar los árboles en la colección
-            db.trees.insert_many(default_trees)
-            print("Colección de árboles creada con éxito.")
-    except Exception as e:
-        print(f"Error al crear la colección de árboles: {str(e)}")
-
-    # Ahora, en lugar de tener la lista de árboles hardcodeada,
-    # obtenemos los árboles de la colección de la base de datos
-    try:
-        trees = list(db.trees.find({}, {"_id": 1, "name": 1, "category": 1, "image_url": 1, "description": 1}))
+        # Obtener todos los tipos de árboles disponibles
+        tree_types = await get_tree_types(current_user)
         
-        # Convertir ObjectId a string para que sea serializable
-        for tree in trees:
-            tree["_id"] = str(tree["_id"])
-            
-        if not trees:
-            # Si no hay árboles en la colección (caso muy raro), usamos una lista predefinida
-            trees = [
-                {
-                    "_id": str(ObjectId()),
-                    "name": "Roble Predeterminado",
-                    "category": "Bosque",
-                    "image_url": "https://cdn.pixabay.com/photo/2015/03/07/10/00/oak-tree-662500_640.jpg",
-                    "description": "Un árbol predeterminado cuando no hay árboles en la base de datos."
-                }
-            ]
+        # Seleccionar un árbol aleatorio de la lista de la base de datos
+        tree_data = random.choice(tree_types)
         
-        # Seleccionar un árbol aleatorio
-        tree = random.choice(trees)
+        # Crear un nuevo árbol con un ID único generado por MongoDB
+        new_tree = {
+            # No definir _id aquí, MongoDB lo generará automáticamente
+            "user_id": current_user["id"],
+            "name": tree_data["name"],
+            "category": tree_data["category"],
+            "description": tree_data["description"],
+            "image_url": tree_data["image_url"],
+            "created_at": datetime.now()
+        }
         
-        # Guardar el árbol en el inventario del usuario
+        # Insertar en la base de datos (MongoDB generará un _id único automáticamente)
+        result = db.trees.insert_one(new_tree)
+        
+        # Obtener el ID generado por MongoDB
+        new_tree_id = str(result.inserted_id)
+        
+        # Actualizar las estadísticas del usuario
         db.users.update_one(
-            {"username": current_user["username"]},
-            {"$push": {"trees": tree}}
+            {"_id": ObjectId(current_user["id"])},
+            {"$inc": {"pomodoros_completed": 1, "total_trees": 1}}
         )
         
+        # Devolver el árbol con su ID para mostrar al usuario
         return {
-            "message": "¡Felicidades! Has completado un pomodoro.",
+            "message": "Pomodoro completado exitosamente",
             "tree": {
-                "id": tree["_id"],
-                "name": tree["name"],
-                "category": tree["category"],
-                "image_url": tree["image_url"],
-                "description": tree["description"]
+                "id": new_tree_id,  # Importante: devolver el ID único
+                "name": new_tree["name"],
+                "category": new_tree["category"],
+                "description": new_tree["description"],
+                "image_url": new_tree["image_url"]
             }
         }
     except Exception as e:
-        return {"error": f"Error al completar pomodoro: {str(e)}"}
+        raise HTTPException(status_code=500, detail=f"Error al completar el pomodoro: {str(e)}")

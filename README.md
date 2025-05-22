@@ -29,6 +29,32 @@ Pomodoro Forest es una aplicación web que combina la técnica Pomodoro con soni
 ### Requisitos previos
 - Python 3.8 o superior
 - MongoDB Atlas (o MongoDB local)
+
+### Configuración de variables de entorno
+
+1. Crea un archivo `.env` en la raíz del proyecto basado en `.env.example`:
+   ```bash
+   # Usa el script proporcionado
+   setup_env.bat
+   
+   # O copia manualmente
+   copy .env.example .env
+   ```
+
+2. Edita el archivo `.env` con tus credenciales reales:
+   ```
+   # MongoDB - Tu URI de conexión
+   MONGO_URI=mongodb+srv://usuario:password@cluster.mongodb.net/pomodoro_forest
+   
+   # JWT - Genera una clave secreta segura
+   SECRET_KEY=clave_secreta_jwt_aleatoria_larga
+   
+   # Configuración
+   DEBUG=False
+   PORT=8000
+   ```
+
+3. El archivo `.env` está incluido en `.gitignore` para proteger tus credenciales
 - Navegador web moderno
 
 ### Backend
@@ -64,15 +90,47 @@ python -m http.server
 
 2. Abre http://localhost:8000 en tu navegador.
 
+## Instrucciones para ejecutar el proyecto
+
+### Desarrollo local (recomendado)
+
+La forma más fácil es usar el script automatizado:
+
+```cmd
+# En la raíz del proyecto:
+dev_server.bat
+```
+
+Este script:
+1. Crea automáticamente el archivo .env si no existe
+2. Configura el modo de desarrollo
+3. Inicia el servidor backend que también sirve los archivos frontend
+
+La aplicación estará disponible en: http://localhost:8000
+
+### Ejecución manual
+
+Si prefieres control manual, sigue estos pasos:
+
+```cmd
+# En la raíz del proyecto:
+setup_env.bat  # Crea el archivo .env si no existe
+
+cd backend
+venv\Scripts\activate
+python run.py
+```
+
 ## Despliegue en Railway 🚀
 
 Este proyecto está configurado para ser desplegado en Railway:
 
 1. Conecta tu repositorio de GitHub a Railway
-2. Railway detectará automáticamente la configuración necesaria
+2. Railway detectará automáticamente la configuración necesaria gracias al Procfile
 3. Asegúrate de configurar las variables de entorno en Railway:
-   - MONGODB_URI
+   - MONGO_URI
    - SECRET_KEY
+   - DEBUG=False
 
 ## Autores 👥
 

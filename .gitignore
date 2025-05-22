@@ -5,6 +5,10 @@ __pycache__/
 *.so
 .Python
 env/
+
+# Environment variables
+.env
+.env.local
 build/
 develop-eggs/
 dist/

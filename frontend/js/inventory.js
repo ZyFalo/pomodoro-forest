@@ -3,26 +3,18 @@
  */
 async function loadInventory() {
     try {
-        // Mostrar spinner mientras carga
-        const inventoryContainer = document.getElementById('inventory');
-        inventoryContainer.innerHTML = `
-            <div class="col-12 text-center py-5">
-                <div class="spinner-grow text-success" role="status">
-                    <span class="visually-hidden">Cargando...</span>
-                </div>
-                <p class="mt-3 text-white">Cargando tu bosque...</p>
-            </div>
-        `;
-        
-        // Obtener los árboles del usuario
+        // Obtener la lista de árboles
         const trees = await api.getTrees();
-        console.log("Árboles recibidos:", trees);
+        console.log("Árboles recuperados:", trees);
+        
+        // Obtener el contenedor de inventario
+        const inventoryContainer = document.getElementById('inventory');
+        const emptyMessage = document.getElementById('emptyInventory');
         
         // Limpiar el contenedor
         inventoryContainer.innerHTML = '';
-        const emptyMessage = document.getElementById('emptyInventory');
         
-        // Si no hay árboles, mostrar mensaje
+        // Verificar si hay árboles para mostrar
         if (!trees || trees.length === 0) {
             inventoryContainer.parentElement.parentElement.classList.add('d-none');
             emptyMessage.classList.remove('d-none');
@@ -32,8 +24,26 @@ async function loadInventory() {
             emptyMessage.classList.add('d-none');
         }
         
+        // Crear un contador por cada tipo de árbol
+        const treeCounters = {};
+        
         // Generar HTML para las tarjetas de árboles
         trees.forEach((tree, index) => {
+            // Asegurar que estamos usando el ID único generado por MongoDB
+            const treeId = tree.id || tree._id;
+            
+            // Contar árboles del mismo tipo para mostrar un número identificador
+            treeCounters[tree.name] = (treeCounters[tree.name] || 0) + 1;
+            const treeNumber = treeCounters[tree.name];
+            
+            // Depuración
+            console.log(`Árbol ${index}:`, { 
+                id: treeId, 
+                name: tree.name,
+                number: treeNumber,
+                category: tree.category 
+            });
+            
             const treeCard = document.createElement('div');
             treeCard.className = 'col-md-6 col-lg-4 tree-item';
             treeCard.style.animationDelay = `${index * 100}ms`;
@@ -47,13 +57,13 @@ async function loadInventory() {
                         </div>
                     </div>
                     <div class="tree-content">
-                        <h3 class="tree-name">${tree.name}</h3>
+                        <h3 class="tree-name">${tree.name} #${treeNumber}</h3>
                         <p class="tree-description">${tree.description}</p>
                         <div class="tree-actions mt-3">
-                            <button class="btn btn-sm btn-outline-success me-2" onclick="editDescription('${tree.id || tree._id}', '${tree.name}', '${tree.category}', '${tree.image_url}', '${tree.description.replace(/'/g, "\\'")}')">
+                            <button class="btn btn-sm btn-outline-success me-2" onclick="editDescription('${treeId}', '${tree.name}', '${tree.category}', '${tree.image_url}', '${tree.description.replace(/'/g, "\\'")}')">
                                 <i class="bi bi-pencil-fill"></i> Personalizar
                             </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteTree('${tree.id || tree._id}', '${tree.name}')">
+                            <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteTree('${treeId}', '${tree.name} #${treeNumber}')">
                                 <i class="bi bi-trash-fill"></i> Eliminar
                             </button>
                         </div>
@@ -63,7 +73,6 @@ async function loadInventory() {
             
             inventoryContainer.appendChild(treeCard);
         });
-        
     } catch (error) {
         console.error('Error al cargar el inventario:', error);
         
@@ -99,7 +108,16 @@ document.addEventListener('DOMContentLoaded', () => {
  * Muestra un modal de confirmación para eliminar un árbol
  */
 function confirmDeleteTree(treeId, treeName) {
-    // Crea el modal dinámicamente
+    // Agregar un console.log para depuración
+    console.log('Confirmando eliminación del árbol:', { id: treeId, name: treeName });
+
+    // Eliminar cualquier modal anterior
+    const existingModal = document.getElementById('deleteTreeModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Crear el modal dinámicamente
     const modalHtml = `
         <div class="modal fade" id="deleteTreeModal" tabindex="-1" aria-labelledby="deleteTreeModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -110,6 +128,7 @@ function confirmDeleteTree(treeId, treeName) {
                     </div>
                     <div class="modal-body">
                         <p>¿Estás seguro de que deseas eliminar el árbol <strong>${treeName}</strong>?</p>
+                        <p class="small text-muted">ID único: ${treeId}</p>
                         <p>Esta acción no se puede deshacer.</p>
                     </div>
                     <div class="modal-footer">
@@ -139,8 +158,11 @@ function confirmDeleteTree(treeId, treeName) {
  */
 async function deleteTree(treeId) {
     try {
+        console.log(`Eliminando árbol con ID: ${treeId}`);
+        
         // Intenta eliminar el árbol
-        await api.deleteTree(treeId);
+        const result = await api.deleteTree(treeId);
+        console.log('Resultado de eliminación:', result);
         
         // Cierra el modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('deleteTreeModal'));

@@ -18,7 +18,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 1 week
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token")
 
 # Models
 class User(BaseModel):
@@ -82,6 +82,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     if user is None:
         raise credentials_exception
     return user
+
+async def is_admin(current_user = Depends(get_current_user)):
+    """
+    Comprueba si el usuario actual tiene permisos de administrador
+    """
+    # Verificar si el usuario tiene rol de administrador
+    return current_user.get("is_admin", False)
 
 # Endpoints
 @router.post("/register", response_model=Token)

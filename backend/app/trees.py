@@ -34,15 +34,26 @@ async def get_trees(current_user = Depends(get_current_user)):
 
 @router.delete("/trees/{tree_id}")
 async def delete_tree(tree_id: str, current_user = Depends(get_current_user)):
-    result = db.users.update_one(
-        {"username": current_user["username"]},
-        {"$pull": {"trees": {"_id": tree_id}}}
-    )
-    
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Tree not found")
-    
-    return {"message": "Tree deleted successfully"}
+    try:
+        # Convertir el string ID a ObjectId para MongoDB
+        object_id = ObjectId(tree_id)
+        
+        # Eliminar SOLO el árbol con ese ID específico y que pertenezca al usuario
+        result = db.trees.delete_one({
+            "_id": object_id,
+            "user_id": current_user["id"]  # Importante: solo eliminar árboles del usuario actual
+        })
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Árbol no encontrado o no tienes permiso para eliminarlo")
+            
+        return {"message": "Árbol eliminado correctamente"}
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="ID de árbol inválido")
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Error al eliminar árbol: {str(e)}")
 
 @router.put("/trees/{tree_id}")
 async def update_tree(tree_id: str, tree: Tree, current_user = Depends(get_current_user)):

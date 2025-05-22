@@ -32,14 +32,10 @@ const api = {
     logout() {
         localStorage.removeItem('token');
         window.location.href = 'index.html';
-    },
-
-    /**
+    },    /**
      * Realiza una petición a la API
      */
     async fetchAPI(endpoint, options = {}) {
-        const API_URL = 'http://localhost:8000';
-        
         // Configuración por defecto
         const fetchOptions = {
             method: options.method || 'GET',
@@ -49,7 +45,6 @@ const api = {
             },
             ...options
         };
-        
         // Añadir token de autenticación si existe
         const token = localStorage.getItem('token');
         if (token) {
@@ -76,74 +71,74 @@ const api = {
             console.error(`Error en fetchAPI (${endpoint}):`, error);
             throw error;
         }
-    },
-
-    /**
+    },    /**
      * Función para registrar un nuevo usuario
      */
     async register(username, password, email = '') {
-        return this.fetchAPI('/register', {
+        return this.fetchAPI('/api/register', {
             method: 'POST',
             body: JSON.stringify({ username, password, email })
         });
-    },
-
-    /**
+    },/**
      * Función para iniciar sesión
-     */
-    async login(username, password) {
+     */    async login(username, password) {
         const formData = new URLSearchParams();
         formData.append('username', username);
         formData.append('password', password);
-
-        const response = await fetch(`${API_BASE_URL}/token`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: formData
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || 'Error al iniciar sesión');
+        
+        try {
+            // Usar nuestro método fetchAPI pero con un formato diferente para el cuerpo
+            const response = await fetch(`${API_BASE_URL}/api/token`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: formData
+            });
+            
+            // Manejar errores
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || `Error ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // Almacenar el token y el nombre de usuario directamente aquí
+            localStorage.setItem('token', data.access_token);
+            localStorage.setItem('username', username);
+            
+            return data;
+        } catch (error) {
+            console.error('Error durante el login:', error);
+            throw error;
         }
-
-        return await response.json();
-    },
-
-    /**
+    },    /**
      * Función para iniciar un pomodoro
      */
     async startPomodoro(duration = 25) {
-        return this.fetchAPI('/start-pomodoro', {
+        return this.fetchAPI('/api/start-pomodoro', {
             method: 'POST',
             body: JSON.stringify({ duration })
         });
-    },
-
-    /**
+    },    /**
      * Función para obtener una frase motivacional
      */
     async getMotivationalPhrase() {
-        return this.fetchAPI('/motivational-phrase');
-    },
-
-    /**
+        return this.fetchAPI('/api/motivational-phrase');
+    },    /**
      * Función para marcar un pomodoro como completado
      */
     async completePomodoro() {
-        return this.fetchAPI('/complete-pomodoro', {
+        return this.fetchAPI('/api/complete-pomodoro', {
             method: 'POST'
         });
-    },
-
-    /**
+    },    /**
      * Función para obtener la lista de árboles del usuario
      */
     async getTrees() {
         try {
-            const response = await this.fetchAPI('/trees');
+            const response = await this.fetchAPI('/api/trees');
             console.log("Respuesta de API trees:", response);
             
             // Verifica si la respuesta contiene un arreglo directamente o dentro de un objeto
@@ -160,16 +155,21 @@ const api = {
             console.error("Error en getTrees:", error);
             return []; // Devuelve un array vacío en caso de error
         }
-    },
-
-    /**
+    },    /**
      * Función para eliminar un árbol
      */
     async deleteTree(treeId) {
-        return this.fetchAPI(`/trees/${treeId}`, {
+        console.log(`API: Eliminando árbol con ID: ${treeId}`);
+        
+        if (!treeId) {
+            throw new Error('ID de árbol no proporcionado');
+        }
+        
+        return this.fetchAPI(`/api/trees/${treeId}`, {
             method: 'DELETE'
         });
-    },    /**
+    },
+    /**
      * Función para actualizar un árbol
      */
     async updateTree(treeId, tree) {
@@ -182,9 +182,8 @@ const api = {
                 image_url: tree.image_url || '',
                 description: tree.description || ''
             };
-            
-            // Realizar la solicitud PUT
-            const response = await this.fetchAPI(`/trees/${treeId}`, {
+              // Realizar la solicitud PUT
+            const response = await this.fetchAPI(`/api/trees/${treeId}`, {
                 method: 'PUT',
                 body: JSON.stringify(treeData)
             });
@@ -197,11 +196,10 @@ const api = {
         }
     },/**
      * Función para obtener estadísticas del usuario
-     */
-    async getUserStats() {
+     */    async getUserStats() {
         try {
             // Intenta obtener datos del servidor
-            const data = await this.fetchAPI('/user/stats');
+            const data = await this.fetchAPI('/api/user/stats');
             console.log("Estadísticas recibidas del servidor:", data);
             
             // Verificar que la respuesta contiene los campos esperados
@@ -229,14 +227,11 @@ const api = {
                 total_focus_minutes: parseInt(localStorage.getItem('total_focus_minutes') || "0")
             };
         }
-    },
-
-    /**
+    },    /**
      * Función para actualizar las estadísticas del usuario
-     */
-    async updateUserStats(stats) {
+     */    async updateUserStats(stats) {
         try {
-            return await this.fetchAPI('/user/stats/update', {
+            return await this.fetchAPI('/api/user/stats/update', {
                 method: 'POST',
                 body: JSON.stringify(stats)
             });
@@ -244,13 +239,24 @@ const api = {
             console.error("Error actualizando estadísticas:", error);
             throw error;
         }
-    },    /**
-     * Función para obtener información del usuario actual
+    },
+    
+    /**
+     * Función para obtener los tipos de árboles disponibles
      */
-    async getCurrentUser() {
+    async getTreeTypes() {
+        try {
+            return await this.fetchAPI('/api/tree-types');
+        } catch (error) {
+            console.error("Error al obtener tipos de árboles:", error);
+            return []; // En caso de error, devuelve un array vacío
+        }
+    },/**
+     * Función para obtener información del usuario actual
+     */    async getCurrentUser() {
         try {
             // Intentar obtener información del usuario del backend
-            const data = await this.fetchAPI('/users/me');
+            const data = await this.fetchAPI('/api/users/me');
             return data;
         } catch (error) {
             console.error("Error obteniendo información del usuario:", error);

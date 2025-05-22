@@ -124,6 +124,48 @@ def guardar_frases_cache(frases):
     except Exception:
         pass
 
+# Variable para almacenar las últimas frases devueltas y evitar repeticiones
+# Usamos una lista circular de las últimas 5 frases usadas
+_ultimas_frases = []
+_MAX_FRASES_RECORDADAS = 5
+
+def obtener_frase_aleatoria_siempre():
+    """Siempre devuelve una frase aleatoria de las frases cacheadas, evitando repetir las últimas"""
+    global _ultimas_frases
+    
+    frases = cargar_frases_cache(verificar_fecha=False)
+    if not frases:
+        # Intentar obtener nuevas frases
+        frase = obtener_frase_del_dia()
+        # Cargar todas las frases
+        frases = cargar_frases_cache(verificar_fecha=False)
+    
+    if frases:
+        if len(frases) > 1:
+            # Filtrar la lista para quitar las últimas frases usadas y evitar repetición
+            frases_disponibles = [f for f in frases if f not in _ultimas_frases]
+            if not frases_disponibles:  # Si todas las frases fueron filtradas (caso extremo)
+                # Si no hay frases disponibles, usamos la más antigua de las recordadas
+                if _ultimas_frases:
+                    nueva_frase = _ultimas_frases.pop(0)
+                else:
+                    nueva_frase = random.choice(frases)
+            else:
+                # Seleccionar una frase aleatoria entre las disponibles
+                nueva_frase = random.choice(frases_disponibles)
+            
+            # Actualizar la lista circular de últimas frases
+            _ultimas_frases.append(nueva_frase)
+            if len(_ultimas_frases) > _MAX_FRASES_RECORDADAS:
+                _ultimas_frases.pop(0)  # Eliminar la frase más antigua
+                
+            return nueva_frase
+        else:
+            # Si solo hay una frase, no hay opción
+            return frases[0]
+    else:
+        return "¡Cada minuto cuenta en tu camino hacia el éxito!"
+
 if __name__ == "__main__":
     # Obtener y mostrar una frase motivacional
     frase = obtener_frase_del_dia()

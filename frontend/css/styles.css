@@ -128,12 +128,71 @@ body {
 
 /* Animaciones */
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes phraseFadeIn {
+    0% { opacity: 0; transform: translateY(10px); filter: blur(5px); }
+    100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes phraseFadeOut {
+    0% { opacity: 1; transform: translateY(0); filter: blur(0); }
+    100% { opacity: 0; transform: translateY(-10px); filter: blur(5px); }
 }
 
 .fade-in {
-    animation: fadeIn 1s ease-in;
+    animation: fadeIn 0.8s ease-in;
+}
+
+.phrase-fade-in {
+    animation: phraseFadeIn 0.8s ease-out forwards;
+}
+
+.phrase-fade-out {
+    animation: phraseFadeOut 0.5s ease-in forwards;
+}
+
+/* Estilos para frases motivacionales */
+.motivational-phrase {
+    position: relative;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    border-radius: var(--border-radius);
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.6;
+    color: white;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: background-color 0.3s ease;
+}
+
+.motivational-phrase::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 10px;
+    font-size: 4rem;
+    opacity: 0.3;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1;
+}
+
+.motivational-phrase::after {
+    content: '"';
+    position: absolute;
+    bottom: -30px;
+    right: 10px;
+    font-size: 4rem;
+    opacity: 0.3;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1;
 }
 
 /* Estilos para el inventario de árboles */
@@ -337,6 +396,11 @@ audio {
     box-shadow: var(--shadow-sm);
     transition: var(--transition-normal);
     border-left: 4px solid var(--secondary-color);
+    height: 140px; /* Altura fija para evitar saltos */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* Evitar desbordamiento de texto largo */
 }
 
 .motivational-phrase:hover {
@@ -345,7 +409,7 @@ audio {
 }
 
 .motivational-phrase::before {
-    content: '"';
+    content: '';
     font-size: 4rem;
     position: absolute;
     left: 1rem;

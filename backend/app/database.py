@@ -1,7 +1,15 @@
 from pymongo import MongoClient
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # MongoDB connection
-MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://williampena:1006506574@cluster0.zgcor.mongodb.net/")
+MONGO_URI = os.getenv("MONGO_URI")
+if not MONGO_URI:
+    print("ADVERTENCIA: MONGO_URI no está configurada en database.py. Usando una conexión de respaldo.")
+    MONGO_URI = "mongodb://localhost:27017/"
+
 client = MongoClient(MONGO_URI)
 db = client["pomodoro_forest"]

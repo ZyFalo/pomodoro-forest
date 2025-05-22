@@ -23,12 +23,20 @@ from app import auth, trees, pomodoro, stats
 load_dotenv()
 
 # MongoDB connection
-MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://williampena:1006506574@cluster0.zgcor.mongodb.net/")
+MONGO_URI = os.getenv("MONGO_URI")
+if not MONGO_URI:
+    print("ADVERTENCIA: MONGO_URI no está configurada. Usando una conexión de respaldo.")
+    MONGO_URI = "mongodb://localhost:27017/"
+
 client = MongoClient(MONGO_URI)
 db = client["pomodoro_forest"]
 
 # JWT configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7")
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    print("ADVERTENCIA: SECRET_KEY no está configurada. Usando una clave temporal (no segura para producción).")
+    SECRET_KEY = "clave_temporal_no_segura_para_produccion"
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 1 week
 
@@ -164,5 +172,10 @@ async def api_root():
 
 if __name__ == "__main__":
     import uvicorn
+    
+    # Obtener puerto y modo debug desde variables de entorno
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+    debug_mode = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
+    
+    # Reload solo en modo debug
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=debug_mode)
