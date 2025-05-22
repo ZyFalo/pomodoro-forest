@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional
 from pydantic import BaseModel
 from bson import ObjectId
+from bson.errors import InvalidId
 from app.auth import get_current_user
 from app.database import db
 
@@ -18,41 +19,80 @@ class TreeInDB(Tree):
 
 @router.get("/trees", response_model=List[TreeInDB])
 async def get_trees(current_user = Depends(get_current_user)):
-    user = db.users.find_one({"username": current_user["username"]})
-    trees = []
-    
-    for tree in user.get("trees", []):
-        trees.append({
-            "id": tree["_id"],
-            "name": tree["name"],
-            "category": tree["category"],
-            "image_url": tree["image_url"],
-            "description": tree["description"]
-        })
-    
-    return trees
+    try:
+        # Buscar árboles en la colección trees (versión nueva)
+        cursor = db.trees.find({"user_id": current_user["id"]})
+        trees = []
+        
+        for tree in cursor:
+            trees.append({
+                "id": str(tree["_id"]),
+                "name": tree["name"],
+                "category": tree["category"],
+                "image_url": tree["image_url"],
+                "description": tree["description"]
+            })
+        
+        # Si hay árboles, devolverlos directamente
+        if trees:
+            return trees
+            
+        # Si no hay árboles en la colección trees, buscar en el campo trees del usuario (versión antigua)
+        user = db.users.find_one({"username": current_user["username"]})
+        if user and "trees" in user:
+            for tree in user.get("trees", []):
+                trees.append({
+                    "id": tree["_id"],
+                    "name": tree["name"],
+                    "category": tree["category"],
+                    "image_url": tree["image_url"],
+                    "description": tree["description"]
+                })
+            
+        return trees
+    except Exception as e:
+        print(f"Error en get_trees: {e}")
+        return []
 
 @router.delete("/trees/{tree_id}")
 async def delete_tree(tree_id: str, current_user = Depends(get_current_user)):
     try:
         # Convertir el string ID a ObjectId para MongoDB
-        object_id = ObjectId(tree_id)
+        try:
+            object_id = ObjectId(tree_id)
+        except InvalidId:
+            raise HTTPException(status_code=400, detail="ID de árbol inválido")
         
-        # Eliminar SOLO el árbol con ese ID específico y que pertenezca al usuario
+        # Intentar primero eliminar de la colección trees (enfoque nuevo)
         result = db.trees.delete_one({
             "_id": object_id,
             "user_id": current_user["id"]  # Importante: solo eliminar árboles del usuario actual
         })
         
-        if result.deleted_count == 0:
+        # Si se eliminó correctamente de la colección trees
+        if result.deleted_count > 0:
+            # También actualizar las estadísticas del usuario
+            db.users.update_one(
+                {"_id": ObjectId(current_user["id"])},
+                {"$inc": {"total_trees": -1}}
+            )
+            return {"message": "Árbol eliminado correctamente"}
+            
+        # Si no se encontró en trees, intentar eliminar del array en users (enfoque antiguo)
+        result = db.users.update_one(
+            {"_id": ObjectId(current_user["id"])},
+            {"$pull": {"trees": {"_id": tree_id}}}
+        )
+        
+        if result.modified_count == 0:
             raise HTTPException(status_code=404, detail="Árbol no encontrado o no tienes permiso para eliminarlo")
             
         return {"message": "Árbol eliminado correctamente"}
-    except InvalidId:
-        raise HTTPException(status_code=400, detail="ID de árbol inválido")
+        
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e
+        print(f"Error al eliminar árbol: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error al eliminar árbol: {str(e)}")
 
 @router.put("/trees/{tree_id}")

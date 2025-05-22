@@ -49,8 +49,7 @@ const api = {
         window.location.href = 'index.html';
     },    /**
      * Realiza una petición a la API
-     */
-    async fetchAPI(endpoint, options = {}) {
+     */    async fetchAPI(endpoint, options = {}) {
         // Configuración por defecto
         const fetchOptions = {
             method: options.method || 'GET',
@@ -66,13 +65,34 @@ const api = {
             fetchOptions.headers['Authorization'] = `Bearer ${token}`;
         }
         
+        const url = buildApiPath(endpoint);
+        console.log(`Realizando petición a: ${url}`);
+        
         try {
-            const response = await fetch(buildApiPath(endpoint), fetchOptions);
+            const response = await fetch(url, fetchOptions);
             
-            // Si la respuesta no es exitosa, lanzar error
+            // Si la respuesta no es exitosa, intentar obtener más detalles del error
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || `Error ${response.status}: ${response.statusText}`);
+                let errorMessage;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.detail || `Error ${response.status}: ${response.statusText}`;
+                } catch (e) {
+                    // Si no se puede analizar el JSON, usar el texto del error
+                    const errorText = await response.text().catch(() => '');
+                    errorMessage = errorText || `Error ${response.status}: ${response.statusText}`;
+                }
+                
+                // Registro detallado del error para depuración
+                console.error(`Error en la petición a ${endpoint}:`, {
+                    statusCode: response.status,
+                    statusText: response.statusText,
+                    message: errorMessage,
+                    endpoint: endpoint,
+                    method: fetchOptions.method
+                });
+                
+                throw new Error(errorMessage);
             }
             
             // Si la respuesta está vacía, devolver un objeto vacío
@@ -142,12 +162,14 @@ const api = {
     },    /**
      * Función para marcar un pomodoro como completado
      */    async completePomodoro() {
-        return this.fetchAPI('/complete-pomodoro', {
-            method: 'POST'
-        });
+        return this.retryOnServerError(async () => {
+            return await this.fetchAPI('/complete-pomodoro', {
+                method: 'POST'
+            });
+        }, 3, 1500); // 3 reintentos con 1.5 segundos de espera inicial
     },    /**
      * Función para obtener la lista de árboles del usuario
-     */    async getTrees() {
+     */async getTrees() {
         try {
             const response = await this.fetchAPI('/trees');
             console.log("Respuesta de API trees:", response);
@@ -168,16 +190,18 @@ const api = {
         }
     },    /**
      * Función para eliminar un árbol
-     */
-    async deleteTree(treeId) {
+     */    async deleteTree(treeId) {
         console.log(`API: Eliminando árbol con ID: ${treeId}`);
         
         if (!treeId) {
             throw new Error('ID de árbol no proporcionado');
-        }        
-        return this.fetchAPI(`/trees/${treeId}`, {
-            method: 'DELETE'
-        });
+        }
+        
+        return this.retryOnServerError(async () => {
+            return await this.fetchAPI(`/trees/${treeId}`, {
+                method: 'DELETE'
+            });
+        }, 2, 1000); // 2 reintentos con 1 segundo de espera inicial
     },
     /**
      * Función para actualizar un árbol
@@ -272,5 +296,43 @@ const api = {
                 username: localStorage.getItem('username') || "Usuario"
             };
         }
-    }
+    },
+    /**
+     * Función para realizar un reintento de una operación API en caso de error del servidor
+     * @param {Function} apiCall - Función que realiza la llamada a la API
+     * @param {number} maxRetries - Número máximo de reintentos
+     * @param {number} delay - Retraso en ms entre reintentos
+     */
+    async retryOnServerError(apiCall, maxRetries = 2, delay = 1000) {
+        let lastError;
+        for (let retry = 0; retry <= maxRetries; retry++) {
+            try {
+                // Si no es el primer intento, mostrar mensaje de reintento
+                if (retry > 0) {
+                    console.log(`Reintentando operación (${retry}/${maxRetries})...`);
+                }
+                
+                // Intentar realizar la llamada a la API
+                return await apiCall();
+            } catch (error) {
+                lastError = error;
+                
+                // Solo reintentar en caso de errores del servidor (500+)
+                const isServerError = error.message && error.message.includes("500");
+                if (!isServerError) {
+                    throw error;
+                }
+                
+                if (retry < maxRetries) {
+                    console.log(`Error del servidor. Reintentando en ${delay}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    // Incrementar el retraso para cada reintento
+                    delay *= 1.5;
+                }
+            }
+        }
+        
+        // Si llegamos aquí, todos los reintentos fallaron
+        throw lastError;
+    },
 };

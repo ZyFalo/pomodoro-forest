@@ -1525,3 +1525,46 @@ audio {
 .user-info, .logout-link {
     line-height: 1.5;
 }
+
+/* Animaciones para mensajes de alerta */
+.alert {
+    animation: slideInDown 0.5s ease-out forwards;
+    position: relative;
+}
+
+.alert.fade {
+    animation: fadeOut 0.5s ease-in forwards;
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.15);
+    border-left: 4px solid var(--primary-color);
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+}
+
+/* Mejora para mensajes de éxito con icono */
+.alert-success i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}

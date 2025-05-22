@@ -107,17 +107,20 @@ async def complete_pomodoro(current_user = Depends(get_current_user)):
         # Obtener todos los tipos de árboles disponibles
         tree_types = await get_tree_types(current_user)
         
+        # Comprobar si se obtuvieron tipos de árboles
+        if not tree_types or len(tree_types) == 0:
+            raise HTTPException(status_code=500, detail="No se encontraron tipos de árboles disponibles")
+            
         # Seleccionar un árbol aleatorio de la lista de la base de datos
         tree_data = random.choice(tree_types)
         
         # Crear un nuevo árbol con un ID único generado por MongoDB
         new_tree = {
-            # No definir _id aquí, MongoDB lo generará automáticamente
             "user_id": current_user["id"],
-            "name": tree_data["name"],
-            "category": tree_data["category"],
-            "description": tree_data["description"],
-            "image_url": tree_data["image_url"],
+            "name": tree_data.get("name", "Árbol"),
+            "category": tree_data.get("category", "General"),
+            "description": tree_data.get("description", "Un nuevo árbol en tu bosque"),
+            "image_url": tree_data.get("image_url", "https://cdn-icons-png.flaticon.com/512/628/628283.png"),
             "created_at": datetime.now()
         }
         
@@ -145,4 +148,10 @@ async def complete_pomodoro(current_user = Depends(get_current_user)):
             }
         }
     except Exception as e:
+        print(f"Error al completar el pomodoro: {str(e)}")
+        # Proporcionar error más detallado para depuración
+        import traceback
+        error_details = traceback.format_exc()
+        print(error_details)
+        
         raise HTTPException(status_code=500, detail=f"Error al completar el pomodoro: {str(e)}")

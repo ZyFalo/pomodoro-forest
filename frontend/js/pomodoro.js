@@ -397,27 +397,113 @@ async function completePomodoro() {
         // Mostrar mensaje de carga
         console.log('Notificando al servidor sobre el pomodoro completado...');
         
-        // Primero - Notificar al servidor que se completó el pomodoro y obtener el árbol
-        const result = await api.completePomodoro();
-        console.log('Resultado de completar pomodoro:', result);
+        // Mostrar notificación de carga
+        const loadingToast = showToast('Guardando tu progreso...', 'info', false);
         
-        if (!result || !result.tree) {
-            throw new Error('No se recibió un árbol del servidor');
+        try {
+            // Primero - Notificar al servidor que se completó el pomodoro y obtener el árbol
+            const result = await api.completePomodoro();
+            console.log('Resultado de completar pomodoro:', result);
+            
+            // Ocultar la notificación de carga
+            hideToast(loadingToast);
+            
+            if (!result || !result.tree) {
+                throw new Error('No se recibió un árbol del servidor');
+            }
+            
+            // Segundo - Actualizar estadísticas en la base de datos
+            console.log('Actualizando estadísticas del usuario...');
+            await api.updateUserStats({
+                pomodoros_completed: newPomodoros,
+                total_focus_minutes: newMinutes
+            });
+            
+            // Finalmente - Mostrar el árbol ganado
+            console.log('Mostrando árbol ganado:', result.tree);
+            showEarnedTree(result.tree);
+        } catch (error) {
+            // Ocultar la notificación de carga si todavía está visible
+            hideToast(loadingToast);
+            throw error;
         }
-        
-        // Segundo - Actualizar estadísticas en la base de datos
-        console.log('Actualizando estadísticas del usuario...');
-        await api.updateUserStats({
-            pomodoros_completed: newPomodoros,
-            total_focus_minutes: newMinutes
-        });
-        
-        // Finalmente - Mostrar el árbol ganado
-        console.log('Mostrando árbol ganado:', result.tree);
-        showEarnedTree(result.tree);
     } catch (error) {
         console.error('Error al completar Pomodoro:', error);
-        alert('Error al completar el Pomodoro: ' + (error.message || 'Error desconocido'));
+        
+        // Mostrar un toast de error más amigable
+        showToast(
+            'No pudimos guardar tu árbol en este momento, pero tu progreso local está guardado. Por favor, intenta de nuevo más tarde.', 
+            'error',
+            true
+        );
+        
+        // Actualizar solo las estadísticas locales si falló la conexión con el servidor
+        try {
+            await api.updateUserStats({
+                pomodoros_completed: parseInt(localStorage.getItem('pomodoros_completed') || '0'),
+                total_focus_minutes: parseInt(localStorage.getItem('total_focus_minutes') || '0')
+            });
+        } catch (e) {
+            console.log('No se pudieron actualizar las estadísticas en el servidor:', e);
+        }
+    }
+}
+
+// Helper para mostrar notificaciones tipo toast
+function showToast(message, type = 'info', autoHide = true) {
+    // Crear contenedor de toasts si no existe
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Crear el toast
+    const toastId = 'toast-' + Date.now();
+    const toastEl = document.createElement('div');
+    toastEl.className = `toast show bg-${type === 'error' ? 'danger' : type} text-white`;
+    toastEl.id = toastId;
+    toastEl.setAttribute('role', 'alert');
+    toastEl.setAttribute('aria-live', 'assertive');
+    toastEl.setAttribute('aria-atomic', 'true');
+    
+    const icon = type === 'info' ? 'info-circle' : 
+                type === 'error' ? 'exclamation-triangle' :
+                type === 'success' ? 'check-circle' : 'bell';
+                
+    toastEl.innerHTML = `
+        <div class="toast-header bg-${type === 'error' ? 'danger' : type} text-white">
+            <i class="bi bi-${icon} me-2"></i>
+            <strong class="me-auto">Pomodoro Forest</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            ${message}
+        </div>
+    `;
+    
+    toastContainer.appendChild(toastEl);
+    
+    // Auto-ocultar después de 5 segundos si se solicita
+    if (autoHide) {
+        setTimeout(() => {
+            hideToast(toastId);
+        }, 5000);
+    }
+    
+    return toastId;
+}
+
+function hideToast(toastId) {
+    const toast = typeof toastId === 'string' ? document.getElementById(toastId) : toastId;
+    if (toast) {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 500);
     }
 }
 

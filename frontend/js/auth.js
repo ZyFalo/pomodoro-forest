@@ -49,11 +49,11 @@ function initAuthForms() {
             loginError.textContent = error.message;
             loginError.classList.remove('d-none');
         }
-    });
-
-    // Formulario de Registro
+    });    // Formulario de Registro
     const registerForm = document.getElementById('registerForm');
     const registerError = document.getElementById('registerError');
+    const registerButton = registerForm.querySelector('button[type="submit"]');
+    const originalButtonText = registerButton.innerHTML;
 
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -66,40 +66,57 @@ function initAuthForms() {
         try {
             registerError.classList.add('d-none');
             
+            // Cambiar el botón a estado de carga
+            registerButton.disabled = true;
+            registerButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Registrando...';
+            
+            // Validaciones adicionales
+            if (username.length < 3) {
+                throw new Error('El nombre de usuario debe tener al menos 3 caracteres');
+            }
+            
+            if (password.length < 6) {
+                throw new Error('La contraseña debe tener al menos 6 caracteres');
+            }
+            
             // Valida que las contraseñas coincidan
             if (password !== confirmPassword) {
                 throw new Error('Las contraseñas no coinciden');
-            }
-              // Intenta registrar al usuario
+            }// Intenta registrar al usuario
             const data = await api.register(username, password, email);
             
-            // Muestra un mensaje de éxito y cambia a la pestaña de login
+            // Muestra un mensaje de éxito pero permanece en la misma pestaña
             registerForm.reset();
             
             // Crear un mensaje de éxito
             const successMessage = document.createElement('div');
             successMessage.className = 'alert alert-success';
-            successMessage.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Registro exitoso. Ahora puedes iniciar sesión con tus credenciales.';
+            successMessage.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Registro exitoso. Ya puedes iniciar sesión con tus credenciales en la pestaña "Iniciar sesión".';
             
             // Insertar el mensaje antes del formulario
             registerForm.parentNode.insertBefore(successMessage, registerForm);
             
-            // Cambiar a la pestaña de login después de 1 segundo
+            // Eliminar el mensaje después de 5 segundos
             setTimeout(() => {
-                // Activar la pestaña de login
-                document.getElementById('login-tab').click();
-                
-                // Remover el mensaje de éxito después de cambiar de pestaña
-                setTimeout(() => {
-                    if (successMessage.parentNode) {
-                        successMessage.parentNode.removeChild(successMessage);
-                    }
-                }, 500);
-            }, 1500);
-        } catch (error) {
+                if (successMessage.parentNode) {
+                    // Añadir clase de desvanecimiento
+                    successMessage.classList.add('fade');
+                    
+                    // Eliminar el elemento después de la animación
+                    setTimeout(() => {
+                        if (successMessage.parentNode) {
+                            successMessage.parentNode.removeChild(successMessage);
+                        }
+                    }, 500);
+                }
+            }, 5000);        } catch (error) {
             // Muestra el error
             registerError.textContent = error.message;
             registerError.classList.remove('d-none');
+        } finally {
+            // Restaurar el botón a su estado original
+            registerButton.disabled = false;
+            registerButton.innerHTML = originalButtonText;
         }
     });
 }
