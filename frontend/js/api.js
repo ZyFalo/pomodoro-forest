@@ -88,7 +88,8 @@ const api = {
         
         try {
             // Usar nuestro método fetchAPI pero con un formato diferente para el cuerpo
-            const response = await fetch(`${API_BASE_URL}/api/token`, {
+            // Corregimos la ruta para evitar la duplicación del prefijo /api
+            const response = await fetch(`${API_BASE_URL}/token`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
