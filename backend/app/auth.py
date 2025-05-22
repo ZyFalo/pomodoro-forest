@@ -81,6 +81,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     user = get_user(username=token_data.username)
     if user is None:
         raise credentials_exception
+    
+    # Asegurar que el usuario tenga un campo id (para compatibilidad)
+    if "id" not in user and "_id" in user:
+        user["id"] = str(user["_id"])
+        
     return user
 
 async def is_admin(current_user = Depends(get_current_user)):

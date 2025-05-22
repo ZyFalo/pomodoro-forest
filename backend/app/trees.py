@@ -57,30 +57,45 @@ async def get_trees(current_user = Depends(get_current_user)):
 @router.delete("/trees/{tree_id}")
 async def delete_tree(tree_id: str, current_user = Depends(get_current_user)):
     try:
+        # Asegurarnos de que tenemos un ID de usuario válido
+        user_id = current_user.get("id")
+        if not user_id:
+            # Si no hay un id, intentamos usar _id como respaldo
+            user_id = str(current_user.get("_id", ""))
+            if not user_id:
+                raise HTTPException(status_code=400, detail="ID de usuario no encontrado")
+        
         # Convertir el string ID a ObjectId para MongoDB
         try:
             object_id = ObjectId(tree_id)
         except InvalidId:
             raise HTTPException(status_code=400, detail="ID de árbol inválido")
+            
+        # Registrar información para depuración
+        print(f"Intentando eliminar árbol: {tree_id}, Usuario: {user_id}")
         
         # Intentar primero eliminar de la colección trees (enfoque nuevo)
         result = db.trees.delete_one({
             "_id": object_id,
-            "user_id": current_user["id"]  # Importante: solo eliminar árboles del usuario actual
+            "user_id": user_id  # Importante: solo eliminar árboles del usuario actual
         })
         
         # Si se eliminó correctamente de la colección trees
         if result.deleted_count > 0:
             # También actualizar las estadísticas del usuario
-            db.users.update_one(
-                {"_id": ObjectId(current_user["id"])},
-                {"$inc": {"total_trees": -1}}
-            )
+            try:
+                db.users.update_one(
+                    {"_id": ObjectId(user_id)},
+                    {"$inc": {"total_trees": -1}}
+                )
+            except Exception as e:
+                print(f"Advertencia: No se pudo actualizar estadísticas: {str(e)}")
+                
             return {"message": "Árbol eliminado correctamente"}
             
         # Si no se encontró en trees, intentar eliminar del array en users (enfoque antiguo)
         result = db.users.update_one(
-            {"_id": ObjectId(current_user["id"])},
+            {"_id": ObjectId(user_id)},
             {"$pull": {"trees": {"_id": tree_id}}}
         )
         

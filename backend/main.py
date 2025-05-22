@@ -71,6 +71,10 @@ app.include_router(trees.router, prefix="/api", tags=["Trees"])
 app.include_router(pomodoro.router, prefix="/api", tags=["Pomodoro"])
 app.include_router(stats.router, prefix="/api", tags=["User Statistics"])
 
+# Importar tree_templates para administración de plantillas
+from app import tree_templates
+app.include_router(tree_templates.router, prefix="/api", tags=["Tree Templates"])
+
 # Sección para servir archivos estáticos - Más robusta
 try:
     # Definir posibles localizaciones del frontend

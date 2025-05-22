@@ -50,12 +50,25 @@ async def get_motivational_phrase(current_user = Depends(get_current_user)):
 async def get_tree_types(current_user = Depends(get_current_user)):
     """
     Obtiene una lista de todos los tipos de árboles disponibles en la base de datos.
-    Si no hay tipos de árboles en la base de datos, se devuelven algunos árboles predeterminados.
     """
-    # Buscar todos los tipos de árboles en la base de datos
-    tree_types = list(db.tree_types.find())
+    # Primero buscamos árboles marcados explícitamente como plantillas
+    template_trees = list(db.trees.find({"is_template": True}))
     
-    # Si no hay tipos de árboles en la base de datos, crear algunos predeterminados
+    # Si encontramos plantillas, las usamos
+    if template_trees and len(template_trees) > 0:
+        tree_types = template_trees
+    else:
+        # Plan B: Si no hay plantillas explícitas, usamos la agrupación por nombre
+        pipeline = [
+            {"$group": {"_id": "$name", "tree": {"$first": "$$ROOT"}}},
+            {"$replaceRoot": {"newRoot": "$tree"}},
+            {"$project": {"_id": 1, "name": 1, "category": 1, "description": 1, "image_url": 1}}
+        ]
+        
+        trees_cursor = db.trees.aggregate(pipeline)
+        tree_types = list(trees_cursor)
+    
+    # Si aun así no hay árboles en la colección, usamos árboles predeterminados
     if not tree_types:
         default_trees = [
             {
@@ -90,8 +103,7 @@ async def get_tree_types(current_user = Depends(get_current_user)):
             }
         ]
         
-        # Insertar los árboles predeterminados en la base de datos
-        db.tree_types.insert_many(default_trees)
+        # En lugar de insertar en tree_types, simplemente devolvemos los árboles predeterminados
         tree_types = default_trees
     
     # Transformar los objetos ObjectId a string para serialización JSON
@@ -104,14 +116,34 @@ async def get_tree_types(current_user = Depends(get_current_user)):
 @router.post("/complete-pomodoro")
 async def complete_pomodoro(current_user = Depends(get_current_user)):
     try:
+        # Asegurarnos de que el current_user tenga un campo id
+        if "id" not in current_user and "_id" in current_user:
+            # Convertir _id a id si es necesario
+            current_user["id"] = str(current_user["_id"])
+        
+        if "id" not in current_user or not current_user["id"]:
+            raise HTTPException(status_code=400, detail="Error de autenticación: ID de usuario no encontrado")
+            
+        # Log para depuración
+        print(f"Completando pomodoro para usuario: {current_user['id']}")
+        
         # Obtener todos los tipos de árboles disponibles
         tree_types = await get_tree_types(current_user)
         
         # Comprobar si se obtuvieron tipos de árboles
         if not tree_types or len(tree_types) == 0:
-            raise HTTPException(status_code=500, detail="No se encontraron tipos de árboles disponibles")
+            print("No se encontraron tipos de árboles, usando árboles predeterminados")
+            # Si llegamos aquí, usamos árboles predeterminados como último recurso
+            tree_types = [
+                {
+                    "name": "Pino",
+                    "category": "Coníferas",
+                    "description": "Un majestuoso pino que simboliza tu enfoque y resistencia.",
+                    "image_url": "https://cdn-icons-png.flaticon.com/512/628/628283.png"
+                }
+            ]
             
-        # Seleccionar un árbol aleatorio de la lista de la base de datos
+        # Seleccionar un árbol aleatorio de la lista
         tree_data = random.choice(tree_types)
         
         # Crear un nuevo árbol con un ID único generado por MongoDB
@@ -121,7 +153,8 @@ async def complete_pomodoro(current_user = Depends(get_current_user)):
             "category": tree_data.get("category", "General"),
             "description": tree_data.get("description", "Un nuevo árbol en tu bosque"),
             "image_url": tree_data.get("image_url", "https://cdn-icons-png.flaticon.com/512/628/628283.png"),
-            "created_at": datetime.now()
+            "created_at": datetime.now(),
+            "is_template": False  # Marcar explícitamente como árbol de usuario, no plantilla
         }
         
         # Insertar en la base de datos (MongoDB generará un _id único automáticamente)
@@ -130,11 +163,18 @@ async def complete_pomodoro(current_user = Depends(get_current_user)):
         # Obtener el ID generado por MongoDB
         new_tree_id = str(result.inserted_id)
         
+        # Log para depuración
+        print(f"Árbol creado con ID: {new_tree_id}")
+        
         # Actualizar las estadísticas del usuario
-        db.users.update_one(
-            {"_id": ObjectId(current_user["id"])},
-            {"$inc": {"pomodoros_completed": 1, "total_trees": 1}}
-        )
+        try:
+            db.users.update_one(
+                {"_id": ObjectId(current_user["id"])},
+                {"$inc": {"pomodoros_completed": 1, "total_trees": 1}}
+            )
+        except Exception as e:
+            print(f"Advertencia: No se pudieron actualizar estadísticas: {str(e)}")
+            # Continuamos aunque falle la actualización de estadísticas
         
         # Devolver el árbol con su ID para mostrar al usuario
         return {
