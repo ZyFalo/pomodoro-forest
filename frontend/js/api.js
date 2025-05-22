@@ -8,6 +8,21 @@ const isProduction = window.location.hostname !== 'localhost' && window.location
 // En producción se usa una ruta relativa, en desarrollo se usa la URL completa
 const API_BASE_URL = isProduction ? '/api' : 'http://localhost:8000';
 
+// Función auxiliar para construir rutas correctamente
+function buildApiPath(endpoint) {
+    // Elimina barras diagonales iniciales si existen
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+    
+    // En desarrollo, añade /api/ al inicio ya que la URL base no lo incluye
+    // En producción, la URL base ya incluye /api/
+    if (!isProduction) {
+        return `${API_BASE_URL}/api/${cleanEndpoint}`;
+    }
+    
+    // En producción, simplemente concatena
+    return `${API_BASE_URL}/${cleanEndpoint}`;
+}
+
 /**
  * Funciones para manejar las peticiones HTTP al API
  */
@@ -52,7 +67,7 @@ const api = {
         }
         
         try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, fetchOptions);
+            const response = await fetch(buildApiPath(endpoint), fetchOptions);
             
             // Si la respuesta no es exitosa, lanzar error
             if (!response.ok) {
@@ -73,15 +88,14 @@ const api = {
         }
     },    /**
      * Función para registrar un nuevo usuario
-     */
-    async register(username, password, email = '') {
-        return this.fetchAPI('/api/register', {
+     */    async register(username, password, email = '') {
+        return this.fetchAPI('/register', {
             method: 'POST',
             body: JSON.stringify({ username, password, email })
         });
     },/**
      * Función para iniciar sesión
-     */    async login(username, password) {
+     */async login(username, password) {
         const formData = new URLSearchParams();
         formData.append('username', username);
         formData.append('password', password);
@@ -89,7 +103,7 @@ const api = {
         try {
             // Usar nuestro método fetchAPI pero con un formato diferente para el cuerpo
             // Corregimos la ruta para evitar la duplicación del prefijo /api
-            const response = await fetch(`${API_BASE_URL}/token`, {
+            const response = await fetch(buildApiPath('/token'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -116,30 +130,26 @@ const api = {
         }
     },    /**
      * Función para iniciar un pomodoro
-     */
-    async startPomodoro(duration = 25) {
-        return this.fetchAPI('/api/start-pomodoro', {
+     */    async startPomodoro(duration = 25) {
+        return this.fetchAPI('/start-pomodoro', {
             method: 'POST',
             body: JSON.stringify({ duration })
         });
     },    /**
      * Función para obtener una frase motivacional
-     */
-    async getMotivationalPhrase() {
-        return this.fetchAPI('/api/motivational-phrase');
+     */    async getMotivationalPhrase() {
+        return this.fetchAPI('/motivational-phrase');
     },    /**
      * Función para marcar un pomodoro como completado
-     */
-    async completePomodoro() {
-        return this.fetchAPI('/api/complete-pomodoro', {
+     */    async completePomodoro() {
+        return this.fetchAPI('/complete-pomodoro', {
             method: 'POST'
         });
     },    /**
      * Función para obtener la lista de árboles del usuario
-     */
-    async getTrees() {
+     */    async getTrees() {
         try {
-            const response = await this.fetchAPI('/api/trees');
+            const response = await this.fetchAPI('/trees');
             console.log("Respuesta de API trees:", response);
             
             // Verifica si la respuesta contiene un arreglo directamente o dentro de un objeto
@@ -164,9 +174,8 @@ const api = {
         
         if (!treeId) {
             throw new Error('ID de árbol no proporcionado');
-        }
-        
-        return this.fetchAPI(`/api/trees/${treeId}`, {
+        }        
+        return this.fetchAPI(`/trees/${treeId}`, {
             method: 'DELETE'
         });
     },
@@ -182,9 +191,8 @@ const api = {
                 category: tree.category || '',
                 image_url: tree.image_url || '',
                 description: tree.description || ''
-            };
-              // Realizar la solicitud PUT
-            const response = await this.fetchAPI(`/api/trees/${treeId}`, {
+            };            // Realizar la solicitud PUT
+            const response = await this.fetchAPI(`/trees/${treeId}`, {
                 method: 'PUT',
                 body: JSON.stringify(treeData)
             });
@@ -194,13 +202,12 @@ const api = {
         } catch (error) {
             console.error("Error al actualizar árbol:", error);
             throw error;
-        }
-    },/**
+        }    },/**
      * Función para obtener estadísticas del usuario
      */    async getUserStats() {
         try {
             // Intenta obtener datos del servidor
-            const data = await this.fetchAPI('/api/user/stats');
+            const data = await this.fetchAPI('/user/stats');
             console.log("Estadísticas recibidas del servidor:", data);
             
             // Verificar que la respuesta contiene los campos esperados
@@ -232,7 +239,7 @@ const api = {
      * Función para actualizar las estadísticas del usuario
      */    async updateUserStats(stats) {
         try {
-            return await this.fetchAPI('/api/user/stats/update', {
+            return await this.fetchAPI('/user/stats/update', {
                 method: 'POST',
                 body: JSON.stringify(stats)
             });
@@ -244,10 +251,9 @@ const api = {
     
     /**
      * Función para obtener los tipos de árboles disponibles
-     */
-    async getTreeTypes() {
+     */    async getTreeTypes() {
         try {
-            return await this.fetchAPI('/api/tree-types');
+            return await this.fetchAPI('/tree-types');
         } catch (error) {
             console.error("Error al obtener tipos de árboles:", error);
             return []; // En caso de error, devuelve un array vacío
@@ -257,7 +263,7 @@ const api = {
      */    async getCurrentUser() {
         try {
             // Intentar obtener información del usuario del backend
-            const data = await this.fetchAPI('/api/users/me');
+            const data = await this.fetchAPI('/users/me');
             return data;
         } catch (error) {
             console.error("Error obteniendo información del usuario:", error);
