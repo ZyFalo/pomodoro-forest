@@ -182,7 +182,7 @@ Este proyecto está configurado para ser desplegado en Railway:
 
 ## Autores 👥
 
-[Tu nombre o equipo aquí]
+William Andrés Peña Vargas
 
 ## Licencia 📜
 
@@ -331,7 +331,6 @@ Para un despliegue en producción, se recomienda:
   "pomodoros_completed": "number",
   "total_focus_minutes": "number",
   "total_trees": "number",
-  "is_admin": "boolean"
 }
 ```
 
@@ -346,8 +345,6 @@ Para un despliegue en producción, se recomienda:
   "image_url": "string",
   "probability": "number",
   "is_template": "boolean",
-  "created_at": "Date",
-  "updated_at": "Date"
 }
 ```
 
