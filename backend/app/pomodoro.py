@@ -146,41 +146,38 @@ async def complete_pomodoro(current_user = Depends(get_current_user)):
         # Seleccionar un árbol aleatorio de la lista
         tree_data = random.choice(tree_types)
         
-        # Crear un nuevo árbol con un ID único generado por MongoDB
+        # Generar un ID único para el árbol
+        new_tree_id = str(ObjectId())
+        
+        # Crear un nuevo árbol con el ID generado
         new_tree = {
-            "user_id": current_user["id"],
+            "_id": new_tree_id,
             "name": tree_data.get("name", "Árbol"),
             "category": tree_data.get("category", "General"),
             "description": tree_data.get("description", "Un nuevo árbol en tu bosque"),
-            "image_url": tree_data.get("image_url", "https://cdn-icons-png.flaticon.com/512/628/628283.png"),
-            "created_at": datetime.now(),
-            "is_template": False  # Marcar explícitamente como árbol de usuario, no plantilla
+            "image_url": tree_data.get("image_url", "https://cdn-icons-png.flaticon.com/512/628/628283.png")
         }
-        
-        # Insertar en la base de datos (MongoDB generará un _id único automáticamente)
-        result = db.trees.insert_one(new_tree)
-        
-        # Obtener el ID generado por MongoDB
-        new_tree_id = str(result.inserted_id)
         
         # Log para depuración
         print(f"Árbol creado con ID: {new_tree_id}")
         
-        # Actualizar las estadísticas del usuario
-        try:
-            db.users.update_one(
-                {"_id": ObjectId(current_user["id"])},
-                {"$inc": {"pomodoros_completed": 1, "total_trees": 1}}
-            )
-        except Exception as e:
-            print(f"Advertencia: No se pudieron actualizar estadísticas: {str(e)}")
-            # Continuamos aunque falle la actualización de estadísticas
+        # Actualizar el usuario: añadir el árbol a su colección y actualizar estadísticas
+        result = db.users.update_one(
+            {"_id": ObjectId(current_user["id"])},
+            {
+                "$push": {"trees": new_tree},
+                "$inc": {"pomodoros_completed": 1, "total_trees": 1}
+            }
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=500, detail="No se pudo agregar el árbol al inventario del usuario")
         
         # Devolver el árbol con su ID para mostrar al usuario
         return {
             "message": "Pomodoro completado exitosamente",
             "tree": {
-                "id": new_tree_id,  # Importante: devolver el ID único
+                "id": new_tree_id,
                 "name": new_tree["name"],
                 "category": new_tree["category"],
                 "description": new_tree["description"],
