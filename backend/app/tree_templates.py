@@ -13,6 +13,7 @@ class TreeTemplate(BaseModel):
     category: str
     image_url: str
     description: str
+    probability: float = 20.0  # Valor por defecto
 
 class TreeTemplateInDB(TreeTemplate):
     id: str
@@ -31,8 +32,7 @@ async def get_tree_templates(current_user = Depends(is_admin)):
     """
     # Primero buscamos los marcados explícitamente como plantillas
     templates = list(db.trees.find({"is_template": True}))
-    
-    # Si tenemos plantillas explícitas, las devolvemos
+      # Si tenemos plantillas explícitas, las devolvemos
     if templates and len(templates) > 0:
         result = []
         for tree in templates:
@@ -41,7 +41,8 @@ async def get_tree_templates(current_user = Depends(is_admin)):
                 "name": tree["name"],
                 "category": tree["category"],
                 "description": tree["description"],
-                "image_url": tree["image_url"]
+                "image_url": tree["image_url"],
+                "probability": tree.get("probability", 20.0)  # Usar valor por defecto si no existe
             })
         return result
     
@@ -49,12 +50,11 @@ async def get_tree_templates(current_user = Depends(is_admin)):
     pipeline = [
         {"$group": {"_id": "$name", "tree": {"$first": "$$ROOT"}}},
         {"$replaceRoot": {"newRoot": "$tree"}},
-        {"$project": {"_id": 1, "name": 1, "category": 1, "description": 1, "image_url": 1}}
+        {"$project": {"_id": 1, "name": 1, "category": 1, "description": 1, "image_url": 1, "probability": 1}}
     ]
     
     tree_templates = list(db.trees.aggregate(pipeline))
-    
-    # Transformar los objetos ObjectId a string para serialización JSON
+      # Transformar los objetos ObjectId a string para serialización JSON
     result = []
     for tree in tree_templates:
         result.append({
@@ -62,7 +62,8 @@ async def get_tree_templates(current_user = Depends(is_admin)):
             "name": tree["name"],
             "category": tree["category"],
             "description": tree["description"],
-            "image_url": tree["image_url"]
+            "image_url": tree["image_url"],
+            "probability": tree.get("probability", 20.0)  # Usar valor por defecto si no existe
         })
     
     return result
@@ -86,25 +87,25 @@ async def create_tree_template(template: TreeTemplate, current_user = Depends(is
         "is_template": True
     })
     
-    if existing:
-        # Actualizar en lugar de crear duplicado
+    if existing:        # Actualizar en lugar de crear duplicado
         db.trees.update_one(
             {"_id": existing["_id"]},
             {"$set": {
                 "category": template.category,
                 "description": template.description,
                 "image_url": template.image_url,
+                "probability": template.probability,  # Incluimos la probabilidad
                 "updated_at": datetime.utcnow()
             }}
         )
         return {**template.dict(), "id": str(existing["_id"])}
-    
-    # Si no existe, crear nuevo
+      # Si no existe, crear nuevo
     new_template = {
         "name": template.name,
         "category": template.category,
         "description": template.description,
         "image_url": template.image_url,
+        "probability": template.probability,  # Incluimos la probabilidad
         "is_template": True,  # Marcamos como plantilla
         "user_id": current_user["id"],  # Asignamos al administrador como propietario
         "created_at": datetime.utcnow()
@@ -128,15 +129,15 @@ async def update_tree_template(template_id: str, template: TreeTemplate, current
         existing = db.trees.find_one({"_id": object_id})
         if not existing:
             raise HTTPException(status_code=404, detail="Template de árbol no encontrado")
-        
-        # Actualizar el template
+          # Actualizar el template
         db.trees.update_one(
             {"_id": object_id},
             {"$set": {
                 "name": template.name,
                 "category": template.category,
                 "description": template.description,
-                "image_url": template.image_url
+                "image_url": template.image_url,
+                "probability": template.probability  # Incluimos la probabilidad
             }}
         )
         

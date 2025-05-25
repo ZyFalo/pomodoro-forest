@@ -11,6 +11,34 @@ import random
 
 router = APIRouter()
 
+def weighted_random_tree(trees):
+    """
+    Selecciona un árbol aleatoriamente basado en su probabilidad.
+    
+    Args:
+        trees: Lista de árboles con una propiedad 'probability'
+        
+    Returns:
+        Un árbol seleccionado según su peso probabilístico
+    """
+    # Asignar probabilidad por defecto si no existe
+    for tree in trees:
+        if "probability" not in tree or tree["probability"] is None:
+            tree["probability"] = 20.0  # Valor por defecto
+    
+    # Calcular las probabilidades acumulativas
+    total = sum(tree.get("probability", 20.0) for tree in trees)
+    r = random.uniform(0, total)
+    accumulated = 0
+    
+    for tree in trees:
+        accumulated += tree.get("probability", 20.0)
+        if accumulated >= r:
+            return tree
+    
+    # En caso extremo, devolver el último árbol
+    return trees[-1] if trees else None
+
 class PomodoroSettings(BaseModel):
     duration: int = 25  # Default 25 minutes
 
@@ -53,8 +81,7 @@ async def get_tree_types(current_user = Depends(get_current_user)):
     """
     # Primero buscamos árboles marcados explícitamente como plantillas
     template_trees = list(db.trees.find({"is_template": True}))
-    
-    # Si encontramos plantillas, las usamos
+      # Si encontramos plantillas, las usamos
     if template_trees and len(template_trees) > 0:
         tree_types = template_trees
     else:
@@ -62,44 +89,48 @@ async def get_tree_types(current_user = Depends(get_current_user)):
         pipeline = [
             {"$group": {"_id": "$name", "tree": {"$first": "$$ROOT"}}},
             {"$replaceRoot": {"newRoot": "$tree"}},
-            {"$project": {"_id": 1, "name": 1, "category": 1, "description": 1, "image_url": 1}}
+            {"$project": {"_id": 1, "name": 1, "category": 1, "description": 1, "image_url": 1, "probability": 1}}
         ]
         
         trees_cursor = db.trees.aggregate(pipeline)
         tree_types = list(trees_cursor)
     
-    # Si aun así no hay árboles en la colección, usamos árboles predeterminados
-    if not tree_types:
+    # Si aun así no hay árboles en la colección, usamos árboles predeterminados    if not tree_types:
         default_trees = [
             {
                 "name": "Pino",
                 "category": "Coníferas",
                 "description": "Un majestuoso pino que simboliza tu enfoque y resistencia.",
-                "image_url": "https://cdn-icons-png.flaticon.com/512/628/628283.png"
+                "image_url": "https://cdn-icons-png.flaticon.com/512/628/628283.png",
+                "probability": 20.0
             },
             {
                 "name": "Roble",
                 "category": "Caducifolios",
                 "description": "Un fuerte roble que representa la solidez de tu trabajo.",
-                "image_url": "https://cdn-icons-png.flaticon.com/512/1245/1245042.png"
+                "image_url": "https://cdn-icons-png.flaticon.com/512/1245/1245042.png",
+                "probability": 20.0
             },
             {
                 "name": "Cerezo",
                 "category": "Florales",
                 "description": "Un hermoso cerezo en flor que simboliza el progreso y la belleza de tu esfuerzo.",
-                "image_url": "https://cdn-icons-png.flaticon.com/512/1466/1466332.png"
+                "image_url": "https://cdn-icons-png.flaticon.com/512/1466/1466332.png",
+                "probability": 20.0
             },
             {
                 "name": "Palmera",
                 "category": "Tropicales",
                 "description": "Una palmera tropical que representa la calma y el equilibrio en tu trabajo.",
-                "image_url": "https://cdn-icons-png.flaticon.com/512/2826/2826838.png"
+                "image_url": "https://cdn-icons-png.flaticon.com/512/2826/2826838.png",
+                "probability": 20.0
             },
             {
                 "name": "Sauce",
                 "category": "Ribereños",
                 "description": "Un tranquilo sauce que simboliza la flexibilidad y adaptabilidad.",
-                "image_url": "https://cdn-icons-png.flaticon.com/512/1466/1466538.png"
+                "image_url": "https://cdn-icons-png.flaticon.com/512/1466/1466538.png",
+                "probability": 20.0
             }
         ]
         
@@ -139,12 +170,13 @@ async def complete_pomodoro(current_user = Depends(get_current_user)):
                     "name": "Pino",
                     "category": "Coníferas",
                     "description": "Un majestuoso pino que simboliza tu enfoque y resistencia.",
-                    "image_url": "https://cdn-icons-png.flaticon.com/512/628/628283.png"
+                    "image_url": "https://cdn-icons-png.flaticon.com/512/628/628283.png",
+                    "probability": 100.0
                 }
             ]
             
-        # Seleccionar un árbol aleatorio de la lista
-        tree_data = random.choice(tree_types)
+        # Seleccionar un árbol basado en probabilidades
+        tree_data = weighted_random_tree(tree_types)
         
         # Generar un ID único para el árbol
         new_tree_id = str(ObjectId())
