@@ -384,12 +384,7 @@ async function completePomodoro() {
         // Mostrar notificación de carga
         const loadingToast = showToast('Guardando tu progreso...', 'info', false);
         
-        try {
-            // Obtener las estadísticas actuales desde el servidor primero
-            console.log('Obteniendo estadísticas actuales...');
-            const userStats = await api.getUserStats();
-            
-            // Notificar al servidor que se completó el pomodoro y obtener el árbol
+        try {            // Primero, completar el pomodoro - Esto incrementará el contador en el servidor
             console.log('Completando pomodoro...');
             const result = await api.completePomodoro();
             console.log('Resultado de completar pomodoro:', result);
@@ -401,18 +396,26 @@ async function completePomodoro() {
                 throw new Error('No se recibió un árbol del servidor');
             }
             
-            // El backend ya incrementó pomodoros_completed, pero necesitamos añadir minutos
-            // Incrementamos los minutos manteniendo el pomodoros_completed que ya aumentó el backend
-            userStats.total_focus_minutes += duration;
+            // Ahora que se completó el pomodoro, obtener las estadísticas actualizadas
+            // que ya tendrán el contador de pomodoros_completed incrementado
+            console.log('Obteniendo estadísticas actualizadas después de completar pomodoro...');
+            const updatedStats = await api.getUserStats();
             
-            // Actualizar estadísticas en la base de datos con valores actualizados
-            console.log('Actualizando estadísticas del usuario...');
-            await api.updateUserStats(userStats);
+            // Actualizar los minutos de enfoque (no se incrementan automáticamente en el backend)
+            updatedStats.total_focus_minutes += duration;
+            
+            // Actualizar estadísticas en la base de datos con los minutos actualizados
+            // El contador de pomodoros ya fue incrementado por el backend en completePomodoro
+            console.log('Actualizando total de minutos en estadísticas del usuario...');
+            await api.updateUserStats({
+                pomodoros_completed: updatedStats.pomodoros_completed,
+                total_focus_minutes: updatedStats.total_focus_minutes
+            });
             
             // Actualizar también las estadísticas localmente
-            localStorage.setItem('pomodoros_completed', userStats.pomodoros_completed.toString());
-            localStorage.setItem('total_focus_minutes', userStats.total_focus_minutes.toString());
-            localStorage.setItem('total_trees', (userStats.total_trees + 1).toString()); // +1 por el árbol nuevo
+            localStorage.setItem('pomodoros_completed', updatedStats.pomodoros_completed.toString());
+            localStorage.setItem('total_focus_minutes', updatedStats.total_focus_minutes.toString());
+            localStorage.setItem('total_trees', updatedStats.total_trees.toString()); // Ya incluye el nuevo árbol
             
             // Actualizar las estadísticas en el DOM si existen los elementos
             const pomodorosCompletedValue = document.getElementById('pomodorosCompletedValue');
