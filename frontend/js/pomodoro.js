@@ -378,22 +378,6 @@ async function completePomodoro() {
         // Obtener la duración del pomodoro que se acaba de completar
         const duration = parseInt(document.getElementById('minutesInput').value || '25');
         
-        // Actualizar estadísticas localmente
-        const currentPomodoros = parseInt(localStorage.getItem('pomodoros_completed') || '0');
-        const newPomodoros = currentPomodoros + 1;
-        localStorage.setItem('pomodoros_completed', newPomodoros.toString());
-        
-        const currentMinutes = parseInt(localStorage.getItem('total_focus_minutes') || '0');
-        const newMinutes = currentMinutes + duration;
-        localStorage.setItem('total_focus_minutes', newMinutes.toString());
-        
-        // Actualizar las estadísticas en el DOM si existe el elemento
-        const pomodorosCompletedValue = document.getElementById('pomodorosCompletedValue');
-        const focusMinutesValue = document.getElementById('focusMinutesValue');
-        
-        if (pomodorosCompletedValue) pomodorosCompletedValue.textContent = newPomodoros;
-        if (focusMinutesValue) focusMinutesValue.textContent = newMinutes;
-        
         // Mostrar mensaje de carga
         console.log('Notificando al servidor sobre el pomodoro completado...');
         
@@ -401,7 +385,12 @@ async function completePomodoro() {
         const loadingToast = showToast('Guardando tu progreso...', 'info', false);
         
         try {
-            // Primero - Notificar al servidor que se completó el pomodoro y obtener el árbol
+            // Obtener las estadísticas actuales desde el servidor primero
+            console.log('Obteniendo estadísticas actuales...');
+            const userStats = await api.getUserStats();
+            
+            // Notificar al servidor que se completó el pomodoro y obtener el árbol
+            console.log('Completando pomodoro...');
             const result = await api.completePomodoro();
             console.log('Resultado de completar pomodoro:', result);
             
@@ -412,12 +401,25 @@ async function completePomodoro() {
                 throw new Error('No se recibió un árbol del servidor');
             }
             
-            // Segundo - Actualizar estadísticas en la base de datos
+            // El backend ya incrementó pomodoros_completed, pero necesitamos añadir minutos
+            // Incrementamos los minutos manteniendo el pomodoros_completed que ya aumentó el backend
+            userStats.total_focus_minutes += duration;
+            
+            // Actualizar estadísticas en la base de datos con valores actualizados
             console.log('Actualizando estadísticas del usuario...');
-            await api.updateUserStats({
-                pomodoros_completed: newPomodoros,
-                total_focus_minutes: newMinutes
-            });
+            await api.updateUserStats(userStats);
+            
+            // Actualizar también las estadísticas localmente
+            localStorage.setItem('pomodoros_completed', userStats.pomodoros_completed.toString());
+            localStorage.setItem('total_focus_minutes', userStats.total_focus_minutes.toString());
+            localStorage.setItem('total_trees', (userStats.total_trees + 1).toString()); // +1 por el árbol nuevo
+            
+            // Actualizar las estadísticas en el DOM si existen los elementos
+            const pomodorosCompletedValue = document.getElementById('pomodorosCompletedValue');
+            const focusMinutesValue = document.getElementById('focusMinutesValue');
+            
+            if (pomodorosCompletedValue) pomodorosCompletedValue.textContent = userStats.pomodoros_completed;
+            if (focusMinutesValue) focusMinutesValue.textContent = userStats.total_focus_minutes;
             
             // Finalmente - Mostrar el árbol ganado
             console.log('Mostrando árbol ganado:', result.tree);
@@ -437,12 +439,11 @@ async function completePomodoro() {
             true
         );
         
-        // Actualizar solo las estadísticas locales si falló la conexión con el servidor
+        // Si hay un error, intentar actualizar solo las estadísticas locales
         try {
-            await api.updateUserStats({
-                pomodoros_completed: parseInt(localStorage.getItem('pomodoros_completed') || '0'),
-                total_focus_minutes: parseInt(localStorage.getItem('total_focus_minutes') || '0')
-            });
+            // Obtener estadísticas actuales antes de intentar actualizarlas
+            const stats = await api.getUserStats();
+            await api.updateUserStats(stats);
         } catch (e) {
             console.log('No se pudieron actualizar las estadísticas en el servidor:', e);
         }

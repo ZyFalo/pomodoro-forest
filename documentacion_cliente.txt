@@ -1,0 +1,56 @@
+Descripción del proyecto
+------------------------
+
+**Pomodoro Forest** es una aplicación web gamificada que motiva a los usuarios a completar sesiones de pomodoro (técnica de productividad) recompensándolos con árboles virtuales coleccionables. Cada vez que un usuario completa un pomodoro, tiene la oportunidad de recibir un árbol, cuya probabilidad de obtención depende de su rareza. Los usuarios pueden ver y gestionar su inventario de árboles, mientras que los administradores pueden crear, editar y eliminar plantillas de árboles, incluyendo la configuración de sus probabilidades.
+
+Características principales:
+- Autenticación de usuarios (registro, inicio de sesión y cierre de sesión).
+- Sistema de inventario personal de árboles virtuales.
+- Recompensa de árboles basada en probabilidad al completar pomodoros.
+- Panel de administración para gestionar plantillas de árboles y sus probabilidades.
+- API documentada y probada, con scripts automáticos para pruebas y generación de documentación.
+- Interfaz web moderna y fácil de usar.
+
+Instrucciones para levantar el entorno local
+-------------------------------------------
+
+1. **Requisitos previos**
+   - Python 3.11 o superior instalado.
+   - MongoDB en ejecución localmente o acceso a una base de datos MongoDB.
+   - (Opcional) Node.js si desea modificar el frontend.
+
+2. **Clonar el repositorio**
+   - Descargue o clone el proyecto en su equipo.
+
+3. **Configurar variables de entorno**
+   - Ejecute el script `setup_env.bat` para crear el archivo `.env` con las variables necesarias.
+   - Edite el archivo `.env` si necesita personalizar la conexión a la base de datos u otros parámetros.
+
+4. **Instalar dependencias**
+   - Ejecute el script `setup.bat` para instalar todas las dependencias del backend automáticamente.
+
+5. **Ejecutar migraciones (opcional pero recomendado)**
+   - Para asegurarse de que todas las plantillas de árboles tengan el campo de probabilidad, ejecute:
+     ```cmd
+     run_migration.bat
+     ```
+   - Esto actualizará la base de datos con los campos necesarios.
+
+6. **Levantar el servidor de desarrollo**
+   - Ejecute el siguiente comando para iniciar el backend y el frontend:
+     ```cmd
+     dev_server.bat
+     ```
+   - El backend estará disponible en `http://localhost:8000` y el frontend en `http://localhost:5500`.
+
+7. **Probar la API y generar documentación**
+   - Puede ejecutar pruebas automáticas de la API y generar documentación ejecutando:
+     ```cmd
+     test_api.bat
+     ```
+   - Los resultados de las pruebas y la documentación se guardarán en la carpeta `docs/`.
+
+8. **Acceder a la aplicación**
+   - Abra su navegador y visite `http://localhost:5500` para usar la aplicación Pomodoro Forest.
+
+Para más detalles sobre endpoints, estructura de la base de datos y administración, consulte el archivo `README.md` y la documentación generada en la carpeta `docs/`.
