@@ -1,0 +1,143 @@
+[
+  {
+    "success": true,
+    "endpoint": "/api/register",
+    "method": "POST",
+    "status_code": 200,
+    "message": "Respuesta esperada: 200, Recibida: 200",
+    "response": {
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXJfMjAyNTA1MjYwNzI0NDIiLCJleHAiOjE3NDg4NjcwODV9.N9266AufDZz5F-1HdUAF-_hHui_rJwnK8GwEcr0u1e8",
+      "token_type": "bearer"
+    },
+    "elapsed": 3037.8599166870117
+  },
+  {
+    "success": true,
+    "endpoint": "/api/token",
+    "method": "POST",
+    "status_code": 200,
+    "message": "Respuesta esperada: 200, Recibida: 200",
+    "response": {
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXJfMjAyNTA1MjYwNzI0NDIiLCJleHAiOjE3NDg4NjcwODd9.DWdVdsjnuBZMwVy_scAlK48FBQ33FP9dwszdDHDoaBs",
+      "token_type": "bearer"
+    },
+    "elapsed": 2364.0592098236084
+  },
+  {
+    "success": true,
+    "endpoint": "/api/start-pomodoro",
+    "method": "POST",
+    "status_code": 200,
+    "message": "Respuesta esperada: 200, Recibida: 200",
+    "response": {
+      "end_time": "2025-05-26T12:29:50.406358",
+      "duration": 5,
+      "audio_url": "https://newnow.cool/forest/BundorfWaldsee.mp3",
+      "motivational_phrase": "\u00abDe aqu\u00ed a un a\u00f1o desear\u00e1s haber empezado hoy\u00bb. \u2014 An\u00f3nimo"
+    },
+    "elapsed": 2785.007953643799
+  },
+  {
+    "success": true,
+    "endpoint": "/api/motivational-phrase",
+    "method": "GET",
+    "status_code": 200,
+    "message": "Respuesta esperada: 200, Recibida: 200",
+    "response": {
+      "phrase": "Motivaci\u00f3n intr\u00ednseca: es la que procede de ti. Est\u00e1 impulsada por la curiosidad, el anhelo o la satisfacci\u00f3n del \u00e9xito. La motivaci\u00f3n intr\u00ednseca es la que inspira al artista que pinta por puro amor al arte, o al atleta aficionado que madruga todos los d\u00edas para entrenar."
+    },
+    "elapsed": 2121.084451675415
+  },
+  {
+    "success": true,
+    "endpoint": "/api/complete-pomodoro",
+    "method": "POST",
+    "status_code": 200,
+    "message": "Respuesta esperada: 200, Recibida: 200",
+    "response": {
+      "message": "Pomodoro completado exitosamente",
+      "tree": {
+        "id": "68345d96e36ea05fe153d163",
+        "name": "Roble",
+        "category": "Bosque",
+        "description": "Un majestuoso roble, s\u00edmbolo de fuerza y perseverancia.",
+        "image_url": "https://cdn0.bioenciclopedia.com/es/posts/8/2/5/roble_comun_528_orig.jpg"
+      }
+    },
+    "elapsed": 2305.1068782806396
+  },
+  {
+    "success": true,
+    "endpoint": "/api/trees",
+    "method": "GET",
+    "status_code": 200,
+    "message": "Respuesta esperada: 200, Recibida: 200",
+    "response": [
+      {
+        "name": "Roble",
+        "category": "Bosque",
+        "image_url": "https://cdn0.bioenciclopedia.com/es/posts/8/2/5/roble_comun_528_orig.jpg",
+        "description": "Un majestuoso roble, s\u00edmbolo de fuerza y perseverancia.",
+        "id": "68345d96e36ea05fe153d163"
+      }
+    ],
+    "elapsed": 2229.651689529419
+  },
+  {
+    "success": true,
+    "endpoint": "/api/trees/68345d96e36ea05fe153d163",
+    "method": "PUT",
+    "status_code": 200,
+    "message": "Respuesta esperada: 200, Recibida: 200",
+    "response": {
+      "message": "\u00c1rbol actualizado correctamente"
+    },
+    "elapsed": 2285.381078720093
+  },
+  {
+    "success": true,
+    "endpoint": "/api/trees/68345d96e36ea05fe153d163",
+    "method": "DELETE",
+    "status_code": 200,
+    "message": "Respuesta esperada: 200, Recibida: 200",
+    "response": {
+      "message": "\u00c1rbol eliminado correctamente"
+    },
+    "elapsed": 2221.177816390991
+  },
+  {
+    "success": true,
+    "endpoint": "/api/user/stats",
+    "method": "GET",
+    "status_code": 200,
+    "message": "Respuesta esperada: 200, Recibida: 200",
+    "response": {
+      "total_trees": 0,
+      "pomodoros_completed": 1,
+      "total_focus_minutes": 0
+    },
+    "elapsed": 2206.8963050842285
+  },
+  {
+    "success": true,
+    "endpoint": "/api/user/stats/update",
+    "method": "POST",
+    "status_code": 200,
+    "message": "Respuesta esperada: 200, Recibida: 200",
+    "response": {
+      "status": "Estad\u00edsticas actualizadas correctamente"
+    },
+    "elapsed": 2214.9980068206787
+  },
+  {
+    "success": false,
+    "endpoint": "/api/admin/tree-templates",
+    "method": "GET",
+    "status_code": 403,
+    "message": "Respuesta esperada: 401, Recibida: 403\nError: {\"detail\":\"Se requieren privilegios de administrador\"}",
+    "response": {
+      "detail": "Se requieren privilegios de administrador"
+    },
+    "elapsed": 2137.117624282837
+  }
+]

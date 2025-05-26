@@ -1,0 +1,570 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación API Pomodoro Forest</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background-color: #2E8B57;
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0.5rem;
+        }
+        .endpoint {
+            margin-bottom: 1.5rem;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            overflow: hidden;
+        }
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+        }
+        .method {
+            font-weight: bold;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            margin-right: 1rem;
+            min-width: 4rem;
+            text-align: center;
+        }
+        .method-get { background-color: #d1ecf1; color: #0c5460; }
+        .method-post { background-color: #d4edda; color: #155724; }
+        .method-put { background-color: #fff3cd; color: #856404; }
+        .method-delete { background-color: #f8d7da; color: #721c24; }
+        .endpoint-body {
+            padding: 0 1.5rem 1.5rem;
+            display: none;
+        }
+        .status-success { color: #155724; }
+        .status-error { color: #721c24; }
+        .response-container {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+        .nav-tabs { margin-bottom: 1rem; }
+        .copy-btn {
+            float: right;
+            font-size: 0.8rem;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            white-space: pre-wrap;
+        }
+        .table-endpoints th,
+        .table-endpoints td {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header text-center">
+            <h1>API Pomodoro Forest</h1>
+            <p class="lead">Documentación interactiva generada automáticamente</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h2 class="h5 mb-0">Resumen de endpoints</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-endpoints">
+                                <thead>
+                                    <tr>
+                                        <th>Endpoint</th>
+                                        <th>Método</th>
+                                        <th>Descripción</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+        <tr>
+            <td>/api/register</td>
+            <td><span class="method method-post">POST</span></td>
+            <td>Register</td>
+            <td class="status-success">200</td>
+        </tr>
+        
+        <tr>
+            <td>/api/token</td>
+            <td><span class="method method-post">POST</span></td>
+            <td>Token</td>
+            <td class="status-success">200</td>
+        </tr>
+        
+        <tr>
+            <td>/api/start-pomodoro</td>
+            <td><span class="method method-post">POST</span></td>
+            <td>Start Pomodoro</td>
+            <td class="status-success">200</td>
+        </tr>
+        
+        <tr>
+            <td>/api/motivational-phrase</td>
+            <td><span class="method method-get">GET</span></td>
+            <td>Motivational Phrase</td>
+            <td class="status-success">200</td>
+        </tr>
+        
+        <tr>
+            <td>/api/complete-pomodoro</td>
+            <td><span class="method method-post">POST</span></td>
+            <td>Complete Pomodoro</td>
+            <td class="status-success">200</td>
+        </tr>
+        
+        <tr>
+            <td>/api/trees</td>
+            <td><span class="method method-get">GET</span></td>
+            <td>Trees</td>
+            <td class="status-success">200</td>
+        </tr>
+        
+        <tr>
+            <td>/api/trees/68345d96e36ea05fe153d163</td>
+            <td><span class="method method-put">PUT</span></td>
+            <td>68345D96E36Ea05Fe153D163</td>
+            <td class="status-success">200</td>
+        </tr>
+        
+        <tr>
+            <td>/api/trees/68345d96e36ea05fe153d163</td>
+            <td><span class="method method-delete">DELETE</span></td>
+            <td>68345D96E36Ea05Fe153D163</td>
+            <td class="status-success">200</td>
+        </tr>
+        
+        <tr>
+            <td>/api/user/stats</td>
+            <td><span class="method method-get">GET</span></td>
+            <td>Stats</td>
+            <td class="status-success">200</td>
+        </tr>
+        
+        <tr>
+            <td>/api/user/stats/update</td>
+            <td><span class="method method-post">POST</span></td>
+            <td>Update</td>
+            <td class="status-success">200</td>
+        </tr>
+        
+        <tr>
+            <td>/api/admin/tree-templates</td>
+            <td><span class="method method-get">GET</span></td>
+            <td>Tree Templates</td>
+            <td class="status-error">403</td>
+        </tr>
+        
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <ul class="nav nav-tabs" id="categoryTabs" role="tablist">
+            
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="api-tab" data-bs-toggle="tab" 
+                    data-bs-target="#api-content" type="button" role="tab" 
+                    aria-controls="api-content" aria-selected="true">
+                API
+            </button>
+        </li>
+        
+        </ul>
+        
+        <div class="tab-content" id="categoryTabContent">
+            
+        <div class="tab-pane fade show active" id="api-content" role="tabpanel" aria-labelledby="api-tab">
+            <div class="mb-4">
+                <h3 class="h4">Endpoints de API</h3>
+                <p class="text-muted">Total: 11 endpoints</p>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(0)">
+                    <div class="method method-post">POST</div>
+                    <div class="path">/api/register</div>
+                    <div class="ms-auto status status-success">200</div>
+                </div>
+                <div class="endpoint-body" id="endpoint-body-0">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4 class="h6">Respuesta</h4>
+                            <div class="response-container">
+                                <button class="btn btn-sm btn-outline-secondary copy-btn" 
+                                        onclick="copyToClipboard('{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXJfMjAyNTA1MjYwNzI0NDIiLCJleHAiOjE3NDg4NjcwODV9.N9266AufDZz5F-1HdUAF-_hHui_rJwnK8GwEcr0u1e8",
+  "token_type": "bearer"
+}')">
+                                    Copiar
+                                </button>
+                                <pre><code>{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXJfMjAyNTA1MjYwNzI0NDIiLCJleHAiOjE3NDg4NjcwODV9.N9266AufDZz5F-1HdUAF-_hHui_rJwnK8GwEcr0u1e8",
+  "token_type": "bearer"
+}</code></pre>
+                            </div>
+                            <p class="small text-muted">Tiempo de respuesta: 3037.86ms</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(1)">
+                    <div class="method method-post">POST</div>
+                    <div class="path">/api/token</div>
+                    <div class="ms-auto status status-success">200</div>
+                </div>
+                <div class="endpoint-body" id="endpoint-body-1">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4 class="h6">Respuesta</h4>
+                            <div class="response-container">
+                                <button class="btn btn-sm btn-outline-secondary copy-btn" 
+                                        onclick="copyToClipboard('{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXJfMjAyNTA1MjYwNzI0NDIiLCJleHAiOjE3NDg4NjcwODd9.DWdVdsjnuBZMwVy_scAlK48FBQ33FP9dwszdDHDoaBs",
+  "token_type": "bearer"
+}')">
+                                    Copiar
+                                </button>
+                                <pre><code>{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXJfMjAyNTA1MjYwNzI0NDIiLCJleHAiOjE3NDg4NjcwODd9.DWdVdsjnuBZMwVy_scAlK48FBQ33FP9dwszdDHDoaBs",
+  "token_type": "bearer"
+}</code></pre>
+                            </div>
+                            <p class="small text-muted">Tiempo de respuesta: 2364.06ms</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(2)">
+                    <div class="method method-post">POST</div>
+                    <div class="path">/api/start-pomodoro</div>
+                    <div class="ms-auto status status-success">200</div>
+                </div>
+                <div class="endpoint-body" id="endpoint-body-2">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4 class="h6">Respuesta</h4>
+                            <div class="response-container">
+                                <button class="btn btn-sm btn-outline-secondary copy-btn" 
+                                        onclick="copyToClipboard('{
+  "end_time": "2025-05-26T12:29:50.406358",
+  "duration": 5,
+  "audio_url": "https://newnow.cool/forest/BundorfWaldsee.mp3",
+  "motivational_phrase": "\u00abDe aqu\u00ed a un a\u00f1o desear\u00e1s haber empezado hoy\u00bb. \u2014 An\u00f3nimo"
+}')">
+                                    Copiar
+                                </button>
+                                <pre><code>{
+  "end_time": "2025-05-26T12:29:50.406358",
+  "duration": 5,
+  "audio_url": "https://newnow.cool/forest/BundorfWaldsee.mp3",
+  "motivational_phrase": "\u00abDe aqu\u00ed a un a\u00f1o desear\u00e1s haber empezado hoy\u00bb. \u2014 An\u00f3nimo"
+}</code></pre>
+                            </div>
+                            <p class="small text-muted">Tiempo de respuesta: 2785.01ms</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(3)">
+                    <div class="method method-get">GET</div>
+                    <div class="path">/api/motivational-phrase</div>
+                    <div class="ms-auto status status-success">200</div>
+                </div>
+                <div class="endpoint-body" id="endpoint-body-3">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4 class="h6">Respuesta</h4>
+                            <div class="response-container">
+                                <button class="btn btn-sm btn-outline-secondary copy-btn" 
+                                        onclick="copyToClipboard('{
+  "phrase": "Motivaci\u00f3n intr\u00ednseca: es la que procede de ti. Est\u00e1 impulsada por la curiosidad, el anhelo o la satisfacci\u00f3n del \u00e9xito. La motivaci\u00f3n intr\u00ednseca es la que inspira al artista que pinta por puro amor al arte, o al atleta aficionado que madruga todos los d\u00edas para entrenar."
+}')">
+                                    Copiar
+                                </button>
+                                <pre><code>{
+  "phrase": "Motivaci\u00f3n intr\u00ednseca: es la que procede de ti. Est\u00e1 impulsada por la curiosidad, el anhelo o la satisfacci\u00f3n del \u00e9xito. La motivaci\u00f3n intr\u00ednseca es la que inspira al artista que pinta por puro amor al arte, o al atleta aficionado que madruga todos los d\u00edas para entrenar."
+}</code></pre>
+                            </div>
+                            <p class="small text-muted">Tiempo de respuesta: 2121.08ms</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(4)">
+                    <div class="method method-post">POST</div>
+                    <div class="path">/api/complete-pomodoro</div>
+                    <div class="ms-auto status status-success">200</div>
+                </div>
+                <div class="endpoint-body" id="endpoint-body-4">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4 class="h6">Respuesta</h4>
+                            <div class="response-container">
+                                <button class="btn btn-sm btn-outline-secondary copy-btn" 
+                                        onclick="copyToClipboard('{
+  "message": "Pomodoro completado exitosamente",
+  "tree": {
+    "id": "68345d96e36ea05fe153d163",
+    "name": "Roble",
+    "category": "Bosque",
+    "description": "Un majestuoso roble, s\u00edmbolo de fuerza y perseverancia.",
+    "image_url": "https://cdn0.bioenciclopedia.com/es/posts/8/2/5/roble_comun_528_orig.jpg"
+  }
+}')">
+                                    Copiar
+                                </button>
+                                <pre><code>{
+  "message": "Pomodoro completado exitosamente",
+  "tree": {
+    "id": "68345d96e36ea05fe153d163",
+    "name": "Roble",
+    "category": "Bosque",
+    "description": "Un majestuoso roble, s\u00edmbolo de fuerza y perseverancia.",
+    "image_url": "https://cdn0.bioenciclopedia.com/es/posts/8/2/5/roble_comun_528_orig.jpg"
+  }
+}</code></pre>
+                            </div>
+                            <p class="small text-muted">Tiempo de respuesta: 2305.11ms</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(5)">
+                    <div class="method method-get">GET</div>
+                    <div class="path">/api/trees</div>
+                    <div class="ms-auto status status-success">200</div>
+                </div>
+                <div class="endpoint-body" id="endpoint-body-5">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4 class="h6">Respuesta</h4>
+                            <div class="response-container">
+                                <button class="btn btn-sm btn-outline-secondary copy-btn" 
+                                        onclick="copyToClipboard('[
+  {
+    "name": "Roble",
+    "category": "Bosque",
+    "image_url": "https://cdn0.bioenciclopedia.com/es/posts/8/2/5/roble_comun_528_orig.jpg",
+    "description": "Un majestuoso roble, s\u00edmbolo de fuerza y perseverancia.",
+    "id": "68345d96e36ea05fe153d163"
+  }
+]')">
+                                    Copiar
+                                </button>
+                                <pre><code>[
+  {
+    "name": "Roble",
+    "category": "Bosque",
+    "image_url": "https://cdn0.bioenciclopedia.com/es/posts/8/2/5/roble_comun_528_orig.jpg",
+    "description": "Un majestuoso roble, s\u00edmbolo de fuerza y perseverancia.",
+    "id": "68345d96e36ea05fe153d163"
+  }
+]</code></pre>
+                            </div>
+                            <p class="small text-muted">Tiempo de respuesta: 2229.65ms</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(6)">
+                    <div class="method method-put">PUT</div>
+                    <div class="path">/api/trees/68345d96e36ea05fe153d163</div>
+                    <div class="ms-auto status status-success">200</div>
+                </div>
+                <div class="endpoint-body" id="endpoint-body-6">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4 class="h6">Respuesta</h4>
+                            <div class="response-container">
+                                <button class="btn btn-sm btn-outline-secondary copy-btn" 
+                                        onclick="copyToClipboard('{
+  "message": "\u00c1rbol actualizado correctamente"
+}')">
+                                    Copiar
+                                </button>
+                                <pre><code>{
+  "message": "\u00c1rbol actualizado correctamente"
+}</code></pre>
+                            </div>
+                            <p class="small text-muted">Tiempo de respuesta: 2285.38ms</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(7)">
+                    <div class="method method-delete">DELETE</div>
+                    <div class="path">/api/trees/68345d96e36ea05fe153d163</div>
+                    <div class="ms-auto status status-success">200</div>
+                </div>
+                <div class="endpoint-body" id="endpoint-body-7">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4 class="h6">Respuesta</h4>
+                            <div class="response-container">
+                                <button class="btn btn-sm btn-outline-secondary copy-btn" 
+                                        onclick="copyToClipboard('{
+  "message": "\u00c1rbol eliminado correctamente"
+}')">
+                                    Copiar
+                                </button>
+                                <pre><code>{
+  "message": "\u00c1rbol eliminado correctamente"
+}</code></pre>
+                            </div>
+                            <p class="small text-muted">Tiempo de respuesta: 2221.18ms</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(8)">
+                    <div class="method method-get">GET</div>
+                    <div class="path">/api/user/stats</div>
+                    <div class="ms-auto status status-success">200</div>
+                </div>
+                <div class="endpoint-body" id="endpoint-body-8">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4 class="h6">Respuesta</h4>
+                            <div class="response-container">
+                                <button class="btn btn-sm btn-outline-secondary copy-btn" 
+                                        onclick="copyToClipboard('{
+  "total_trees": 0,
+  "pomodoros_completed": 1,
+  "total_focus_minutes": 0
+}')">
+                                    Copiar
+                                </button>
+                                <pre><code>{
+  "total_trees": 0,
+  "pomodoros_completed": 1,
+  "total_focus_minutes": 0
+}</code></pre>
+                            </div>
+                            <p class="small text-muted">Tiempo de respuesta: 2206.90ms</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(9)">
+                    <div class="method method-post">POST</div>
+                    <div class="path">/api/user/stats/update</div>
+                    <div class="ms-auto status status-success">200</div>
+                </div>
+                <div class="endpoint-body" id="endpoint-body-9">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4 class="h6">Respuesta</h4>
+                            <div class="response-container">
+                                <button class="btn btn-sm btn-outline-secondary copy-btn" 
+                                        onclick="copyToClipboard('{
+  "status": "Estad\u00edsticas actualizadas correctamente"
+}')">
+                                    Copiar
+                                </button>
+                                <pre><code>{
+  "status": "Estad\u00edsticas actualizadas correctamente"
+}</code></pre>
+                            </div>
+                            <p class="small text-muted">Tiempo de respuesta: 2215.00ms</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-header" onclick="toggleEndpoint(10)">
+                    <div class="method method-get">GET</div>
+                    <div class="path">/api/admin/tree-templates</div>
+                    <div class="ms-auto status status-error">403</div>
+                </div>
+                <div class="endpoint-body" id="endpoint-body-10">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4 class="h6">Respuesta</h4>
+                            <div class="response-container">
+                                <button class="btn btn-sm btn-outline-secondary copy-btn" 
+                                        onclick="copyToClipboard('{
+  "detail": "Se requieren privilegios de administrador"
+}')">
+                                    Copiar
+                                </button>
+                                <pre><code>{
+  "detail": "Se requieren privilegios de administrador"
+}</code></pre>
+                            </div>
+                            <p class="small text-muted">Tiempo de respuesta: 2137.12ms</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        </div>
+        
+        <footer class="mt-5 text-center text-muted">
+            <p>Generado el 2025-05-26 07:25:08 • Pomodoro Forest API Documentation</p>
+        </footer>
+    </div>
+    
+    <script>
+        function toggleEndpoint(id) {
+            const body = document.getElementById('endpoint-body-' + id);
+            if (body.style.display === 'block') {
+                body.style.display = 'none';
+            } else {
+                body.style.display = 'block';
+            }
+        }
+        
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copiado al portapapeles');
+            });
+        }
+    </script>
+</body>
+</html>
